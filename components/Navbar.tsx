@@ -13,8 +13,8 @@ export default function Navbar() {
   // Mevcut dili pathname'den tespit et
   const currentLocale = pathname?.startsWith('/de') ? 'de' : pathname?.startsWith('/tr') ? 'tr' : 'de';
 
-  // Admin, login, menu, speisekarte sayfalarında Navbar'ı gizle
-  if (pathname?.startsWith('/admin') || pathname?.startsWith('/login') || pathname?.startsWith('/menu') || pathname?.startsWith('/speisekarte')) {
+  // Admin, login, menu sayfalarında Navbar'ı gizle
+  if (pathname?.startsWith('/admin') || pathname?.startsWith('/login') || pathname?.startsWith('/menu')) {
     return null;
   }
 

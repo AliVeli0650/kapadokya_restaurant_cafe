@@ -61,12 +61,12 @@ export default async function SpeisekartePage() {
   return (
     <div className="min-h-screen bg-gray-50">
       
-      {/* Hero Section */}
-      <div className="bg-gray-900 text-white py-16">
+      {/* Hero Section - Navbar için padding ekledik */}
+      <div className="bg-gray-900 text-white pt-32 pb-16">
         <div className="max-w-6xl mx-auto px-6">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
             <div>
-              <h1 className="text-5xl font-light tracking-wide mb-3">Unsere Speisekarte</h1>
+              <h1 className="text-4xl md:text-5xl font-light tracking-wide mb-3">Unsere Speisekarte</h1>
               <p className="text-gray-300 text-lg max-w-2xl">
                 Entdecken Sie unsere köstlichen Gerichte mit frischen Zutaten
               </p>
@@ -76,7 +76,7 @@ export default async function SpeisekartePage() {
                 href={settings.lieferandoUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="bg-white text-gray-900 px-8 py-4 text-sm uppercase tracking-wide font-semibold hover:bg-gray-100 transition-colors inline-block text-center"
+                className="bg-white text-gray-900 px-6 md:px-8 py-3 md:py-4 text-sm uppercase tracking-wide font-semibold hover:bg-gray-100 transition-colors inline-block text-center"
               >
                 {settings.orderBtn}
               </a>

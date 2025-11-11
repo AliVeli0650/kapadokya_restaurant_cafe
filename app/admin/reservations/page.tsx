@@ -41,7 +41,17 @@ export default function ReservationsPage() {
         .order('date', { ascending: true })
         .order('time', { ascending: true });
 
-      if (error) throw error;
+      if (error) {
+        // Tablo yoksa kullanıcıya bilgi ver
+        if (error.code === '42P01') {
+          console.error('Reservations table does not exist. Please run the SQL migration.');
+          toast.error('Rezervasyon tablosu henüz oluşturulmamış. Lütfen SQL migration dosyasını Supabase\'de çalıştırın.');
+        } else {
+          throw error;
+        }
+        setReservations([]);
+        return;
+      }
       setReservations(data || []);
     } catch (error) {
       console.error('Error loading reservations:', error);
