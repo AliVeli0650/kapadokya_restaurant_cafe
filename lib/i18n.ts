@@ -14,6 +14,7 @@ export default getRequestConfig(async ({ locale }) => {
   // `messages/de.json` veya `messages/tr.json` dosyasını
   // dinamik olarak import et ve döndür.
   return {
-    messages: (await import(`./messages/${locale}.json`)).default
+    locale: locale as string,
+    messages: (await import(`../messages/${locale}.json`)).default
   };
 });
