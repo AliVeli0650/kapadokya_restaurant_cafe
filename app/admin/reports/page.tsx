@@ -16,6 +16,12 @@ interface IncomeTransaction {
   income_sources: { name: string } | null;
 }
 
+interface FetchedIncomeTransaction {
+  amount: any;
+  transaction_date: any;
+  income_sources: { name: any }[] | null;
+}
+
 interface ExpenseData {
   amount: number;
   expense_date: string;
@@ -102,7 +108,15 @@ export default function ReportsPage() {
       
       if (expErr) throw expErr;
 
-      const incData = (incomeData || []) as IncomeTransaction[];
+      const fetchedIncData = (incomeData || []) as FetchedIncomeTransaction[];
+      const incData: IncomeTransaction[] = fetchedIncData.map(item => ({
+        amount: Number(item.amount),
+        transaction_date: String(item.transaction_date),
+        income_sources: Array.isArray(item.income_sources) && item.income_sources.length > 0 
+          ? { name: String(item.income_sources[0].name) } 
+          : null,
+      }));
+
       const expData = (expenseData || []) as any[];
 
       // Calculate totals
