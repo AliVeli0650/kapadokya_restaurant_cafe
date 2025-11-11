@@ -1,0 +1,47 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom Styles - Brikz.de inspired */
+
+@layer base {
+  /* Custom Font & Base Styles */
+  body {
+    @apply antialiased text-gray-900;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-light;
+    letter-spacing: 0.05em;
+  }
+}
+
+@layer components {
+  /* Custom Button Styles */
+  .btn-primary {
+    @apply bg-gray-900 text-white px-8 py-3 text-sm uppercase tracking-wider hover:bg-gray-800 transition-all duration-300;
+  }
+
+  .btn-outline {
+    @apply border-2 border-gray-900 text-gray-900 px-8 py-3 text-sm uppercase tracking-wider hover:bg-gray-900 hover:text-white transition-all duration-300;
+  }
+}
+
+@layer utilities {
+  /* Smooth Scroll */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Remove number input arrows */
+  input[type='number']::-webkit-inner-spin-button,
+  input[type='number']::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  
+  input[type='number'] {
+    -moz-appearance: textfield;
+  }
+}

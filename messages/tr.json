@@ -1,0 +1,18 @@
+{
+  "Navbar": {
+    "home": "Ana Sayfa",
+    "menu": "Menü",
+    "contact": "İletişim",
+    "order": "Online Sipariş"
+  },
+  "Footer": {
+    "contactTitle": "İletişim",
+    "address": "Adres",
+    "phone": "Telefon",
+    "email": "E-posta",
+    "hoursTitle": "Açılış Saatleri",
+    "aboutTitle": "Kapadokya",
+    "aboutText": "Hagen'in kalbinde otantik Türk mutfağı ve Kapadokya'nın büyüsü.",
+    "copyright": "Tüm hakları saklıdır."
+  }
+}

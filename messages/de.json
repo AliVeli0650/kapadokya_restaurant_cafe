@@ -1,0 +1,18 @@
+{
+  "Navbar": {
+    "home": "Startseite",
+    "menu": "Speisekarte",
+    "contact": "Kontakt",
+    "order": "Online Bestellen"
+  },
+  "Footer": {
+    "contactTitle": "Kontakt",
+    "address": "Adresse",
+    "phone": "Telefon",
+    "email": "E-Mail",
+    "hoursTitle": "Öffnungszeiten",
+    "aboutTitle": "Kapadokya",
+    "aboutText": "Authentische türkische Küche und die Magie Kappadokiens im Herzen von Hagen.",
+    "copyright": "Alle Rechte vorbehalten."
+  }
+}
