@@ -49,33 +49,36 @@ export default function IncomeSourcesPage() {
       return;
     }
 
-    const promise = supabase
-      .from('income_sources')
-      [editingId ? 'update' : 'insert'](
-        editingId
-          ? {
-              name: formData.name.trim(),
-              description: formData.description.trim() || null,
-              updated_at: new Date().toISOString(),
-            }
-          : [{
-              name: formData.name.trim(),
-              description: formData.description.trim() || null,
-            }]
-      )
-      .eq('id', editingId);
+    try {
+      if (editingId) {
+        const { error } = await supabase
+          .from('income_sources')
+          .update({
+            name: formData.name.trim(),
+            description: formData.description.trim() || null,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', editingId);
 
-    toast.promise(promise, {
-      loading: 'Kaydediliyor...',
-      success: () => {
-        fetchSources();
-        resetForm();
-        return editingId ? 'Başarıyla güncellendi' : 'Başarıyla eklendi';
-      },
-      error: (err) => {
-        return `Hata: ${err.message}`;
-      },
-    });
+        if (error) throw error;
+        toast.success('Başarıyla güncellendi');
+      } else {
+        const { error } = await supabase
+          .from('income_sources')
+          .insert([{
+            name: formData.name.trim(),
+            description: formData.description.trim() || null,
+          }]);
+
+        if (error) throw error;
+        toast.success('Başarıyla eklendi');
+      }
+
+      fetchSources();
+      resetForm();
+    } catch (err: any) {
+      toast.error(`Hata: ${err.message}`);
+    }
   };
 
   const handleEdit = (source: IncomeSource) => {
@@ -91,16 +94,19 @@ export default function IncomeSourcesPage() {
       return;
     }
 
-    const promise = supabase.from('income_sources').delete().eq('id', id);
+    try {
+      const { error } = await supabase
+        .from('income_sources')
+        .delete()
+        .eq('id', id);
 
-    toast.promise(promise, {
-      loading: 'Siliniyor...',
-      success: () => {
-        fetchSources();
-        return 'Başarıyla silindi';
-      },
-      error: (err) => `Hata: ${err.message}`,
-    });
+      if (error) throw error;
+      
+      toast.success('Başarıyla silindi');
+      fetchSources();
+    } catch (err: any) {
+      toast.error(`Hata: ${err.message}`);
+    }
   };
 
   const resetForm = () => {
