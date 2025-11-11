@@ -126,7 +126,6 @@ export default function IncomeSourcesPage() {
     <div className="max-w-4xl mx-auto p-6">
       <h1 className="text-3xl font-bold mb-6">Gelir Kaynakları Yönetimi</h1>
 
-      {/* Form */}
       <div className="bg-white rounded-lg shadow-md p-6 mb-8">
         <h2 className="text-xl font-semibold mb-4">
           {editingId ? 'Gelir Kaynağını Düzenle' : 'Yeni Gelir Kaynağı Ekle'}
@@ -179,7 +178,6 @@ export default function IncomeSourcesPage() {
         </form>
       </div>
 
-      {/* List */}
       <div className="bg-white rounded-lg shadow-md overflow-hidden">
         <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
           <h2 className="text-xl font-semibold">Mevcut Gelir Kaynakları</h2>
@@ -234,7 +232,7 @@ export default function IncomeSourcesPage() {
                     </td>
                   </tr>
                 ))
-              }
+              )}
             </tbody>
           </table>
         </div>
