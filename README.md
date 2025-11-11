@@ -82,6 +82,10 @@ b. **Dish of the Day** (`ADD_DISH_OF_DAY_COLUMN.sql`):
 c. **Complete Migration** (`SUPABASE_MIGRATION_COMPLETE.sql`):
    - Full schema including accounting tables (expenses, income, etc.)
 
+d. **Reservations Table** (`supabase/migrations/create_reservations_table.sql`):
+   - Creates reservations table for customer bookings
+   - Adds RLS policies for public form submissions and admin management
+
 5. Run the development server:
 ```bash
 npm run dev

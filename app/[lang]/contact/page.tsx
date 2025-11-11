@@ -2,6 +2,7 @@
 'use client';
 
 import { useState } from 'react';
+import toast from 'react-hot-toast';
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
@@ -13,11 +14,45 @@ export default function ContactPage() {
     guests: '2',
     message: ''
   });
+  
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Form submit işlemi buraya gelecek (Supabase)
-    console.log('Form submitted:', formData);
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch('/api/reservations', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        toast.success('Reservierung erfolgreich eingereicht! Wir werden uns bald bei Ihnen melden.');
+        // Formu sıfırla
+        setFormData({
+          name: '',
+          email: '',
+          phone: '',
+          date: '',
+          time: '',
+          guests: '2',
+          message: ''
+        });
+      } else {
+        toast.error(data.error || 'Fehler beim Senden der Reservierung');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      toast.error('Ein Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -219,9 +254,10 @@ export default function ContactPage() {
 
                 <button
                   type="submit"
-                  className="w-full bg-gray-900 text-white py-4 text-sm uppercase tracking-wider hover:bg-gray-800 transition-all duration-300"
+                  disabled={isSubmitting}
+                  className="w-full bg-gray-900 text-white py-4 text-sm uppercase tracking-wider hover:bg-gray-800 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Reservierung anfragen
+                  {isSubmitting ? 'Wird gesendet...' : 'Reservierung anfragen'}
                 </button>
 
                 <p className="text-sm text-gray-500 text-center">
