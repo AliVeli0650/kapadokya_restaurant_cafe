@@ -109,13 +109,10 @@ export default function ReportsPage() {
       
       if (expErr) throw expErr;
 
-      const fetchedIncData = (incomeData || []) as FetchedIncomeTransaction[];
-      const incData: IncomeTransaction[] = fetchedIncData.map(item => ({
+      const incData: IncomeTransaction[] = (incomeData || []).map((item: any) => ({
         amount: Number(item.amount),
         transaction_date: String(item.transaction_date),
-        income_sources: Array.isArray(item.income_sources) && item.income_sources.length > 0 
-          ? { name: String(item.income_sources[0].name) } 
-          : null,
+        income_sources: item.income_sources ? { name: String(item.income_sources.name) } : null,
       }));
 
       const expData = (expenseData || []) as any[];
