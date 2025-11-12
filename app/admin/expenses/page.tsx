@@ -297,7 +297,7 @@ export default function ExpensesPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 <div>
                   <label className="block text-sm uppercase tracking-wide text-gray-700 mb-2">
-                    Gerçek Tutar (€) *
+                    Tutar (€) *
                   </label>
                   <input
                     type="number"
@@ -313,17 +313,16 @@ export default function ExpensesPage() {
 
                 <div>
                   <label className="block text-sm uppercase tracking-wide text-gray-700 mb-2">
-                    Resmi Tutar (€)
+                    Esas Tutar (€)
                   </label>
                   <input
                     type="number"
                     step="0.01"
                     value={amountOfficial}
                     onChange={(e) => setAmountOfficial(e.target.value)}
-                    placeholder="Boş bırakılırsa gerçek tutara eşit olur"
+                    placeholder="Boş bırakılırsa tutara eşit olur"
                     className="w-full border border-gray-300 px-4 py-3 focus:outline-none focus:border-gray-900"
                   />
-                  <p className="text-xs text-green-600 mt-1">Vergiye tabi tutar (fatura edilmiş)</p>
                 </div>
               </div>
 
@@ -480,9 +479,9 @@ export default function ExpensesPage() {
         <div className="bg-white border border-gray-200 p-6 mb-8">
           <div className="flex justify-between items-center">
             <div>
-              <h3 className="text-lg font-light uppercase tracking-wide">Toplam Gider (Gerçek)</h3>
+              <h3 className="text-lg font-light uppercase tracking-wide">Toplam Gider</h3>
               <p className="text-3xl font-light text-gray-900 mt-2">€{totalExpenses.toFixed(2)}</p>
-              <p className="text-xs text-green-600 mt-1 bg-green-50 inline-block px-2 py-1 rounded">Resmi: €{totalExpensesOfficial.toFixed(2)}</p>
+              <p className="text-xs text-green-600 mt-1 bg-green-50 inline-block px-2 py-1 rounded">Esas: €{totalExpensesOfficial.toFixed(2)}</p>
             </div>
             <p className="text-sm text-gray-500">{expenses.length} kayıt gösteriliyor</p>
           </div>

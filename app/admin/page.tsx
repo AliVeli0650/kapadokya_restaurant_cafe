@@ -127,23 +127,23 @@ export default function AdminDashboard() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             
             <div className="bg-white p-6 border border-gray-200">
-              <p className="text-sm uppercase tracking-wide text-gray-500 mb-2">Ciro (Gerçek)</p>
+              <p className="text-sm uppercase tracking-wide text-gray-500 mb-2">Ciro</p>
               <p className="text-3xl font-light text-gray-900">€{stats.todayIncome.toFixed(2)}</p>
-              <p className="text-xs text-green-600 mt-1 bg-green-50 inline-block px-2 py-0.5 rounded">Resmi: €{stats.todayIncomeOfficial.toFixed(2)}</p>
+              <p className="text-xs text-green-600 mt-1 bg-green-50 inline-block px-2 py-0.5 rounded">Esas: €{stats.todayIncomeOfficial.toFixed(2)}</p>
             </div>
 
             <div className="bg-white p-6 border border-gray-200">
-              <p className="text-sm uppercase tracking-wide text-gray-500 mb-2">Gider (Gerçek)</p>
+              <p className="text-sm uppercase tracking-wide text-gray-500 mb-2">Gider</p>
               <p className="text-3xl font-light text-gray-900">€{stats.todayExpense.toFixed(2)}</p>
-              <p className="text-xs text-green-600 mt-1 bg-green-50 inline-block px-2 py-0.5 rounded">Resmi: €{stats.todayExpenseOfficial.toFixed(2)}</p>
+              <p className="text-xs text-green-600 mt-1 bg-green-50 inline-block px-2 py-0.5 rounded">Esas: €{stats.todayExpenseOfficial.toFixed(2)}</p>
             </div>
 
             <div className="bg-white p-6 border border-gray-200">
-              <p className="text-sm uppercase tracking-wide text-gray-500 mb-2">Kar/Zarar (Gerçek)</p>
+              <p className="text-sm uppercase tracking-wide text-gray-500 mb-2">Kar/Zarar</p>
               <p className={`text-3xl font-light ${stats.todayProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                 €{stats.todayProfit.toFixed(2)}
               </p>
-              <p className="text-xs text-green-600 mt-1 bg-green-50 inline-block px-2 py-0.5 rounded">Resmi: €{stats.todayProfitOfficial.toFixed(2)}</p>
+              <p className="text-xs text-green-600 mt-1 bg-green-50 inline-block px-2 py-0.5 rounded">Esas: €{stats.todayProfitOfficial.toFixed(2)}</p>
             </div>
 
           </div>
@@ -155,23 +155,23 @@ export default function AdminDashboard() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             
             <div className="bg-white p-6 border border-gray-200">
-              <p className="text-sm uppercase tracking-wide text-gray-500 mb-2">Ciro (Gerçek)</p>
+              <p className="text-sm uppercase tracking-wide text-gray-500 mb-2">Ciro</p>
               <p className="text-3xl font-light text-gray-900">€{stats.monthIncome.toFixed(2)}</p>
-              <p className="text-xs text-green-600 mt-1 bg-green-50 inline-block px-2 py-0.5 rounded">Resmi: €{stats.monthIncomeOfficial.toFixed(2)}</p>
+              <p className="text-xs text-green-600 mt-1 bg-green-50 inline-block px-2 py-0.5 rounded">Esas: €{stats.monthIncomeOfficial.toFixed(2)}</p>
             </div>
 
             <div className="bg-white p-6 border border-gray-200">
-              <p className="text-sm uppercase tracking-wide text-gray-500 mb-2">Toplam Gider (Gerçek)</p>
+              <p className="text-sm uppercase tracking-wide text-gray-500 mb-2">Toplam Gider</p>
               <p className="text-3xl font-light text-gray-900">€{stats.monthExpense.toFixed(2)}</p>
-              <p className="text-xs text-green-600 mt-1 bg-green-50 inline-block px-2 py-0.5 rounded">Resmi: €{stats.monthExpenseOfficial.toFixed(2)}</p>
+              <p className="text-xs text-green-600 mt-1 bg-green-50 inline-block px-2 py-0.5 rounded">Esas: €{stats.monthExpenseOfficial.toFixed(2)}</p>
             </div>
 
             <div className="bg-white p-6 border border-gray-200">
-              <p className="text-sm uppercase tracking-wide text-gray-500 mb-2">Net Kar/Zarar (Gerçek)</p>
+              <p className="text-sm uppercase tracking-wide text-gray-500 mb-2">Net Kar/Zarar</p>
               <p className={`text-3xl font-light ${stats.monthProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                 €{stats.monthProfit.toFixed(2)}
               </p>
-              <p className="text-xs text-green-600 mt-1 bg-green-50 inline-block px-2 py-0.5 rounded">Resmi: €{stats.monthProfitOfficial.toFixed(2)}</p>
+              <p className="text-xs text-green-600 mt-1 bg-green-50 inline-block px-2 py-0.5 rounded">Esas: €{stats.monthProfitOfficial.toFixed(2)}</p>
             </div>
 
           </div>

@@ -160,7 +160,7 @@ export default function IncomePage() {
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 <div>
-                  <label className="block text-sm uppercase tracking-wide text-gray-700 mb-2">Gerçek Tutar (€) *</label>
+                  <label className="block text-sm uppercase tracking-wide text-gray-700 mb-2">Tutar (€) *</label>
                   <input 
                     type="number" 
                     step="0.01" 
@@ -174,17 +174,16 @@ export default function IncomePage() {
                   <p className="text-xs text-gray-500 mt-1">Kasaya giren toplam tutar</p>
                 </div>
                 <div>
-                  <label className="block text-sm uppercase tracking-wide text-gray-700 mb-2">Resmi Tutar (€)</label>
+                  <label className="block text-sm uppercase tracking-wide text-gray-700 mb-2">Esas Tutar (€)</label>
                   <input 
                     type="number" 
                     step="0.01" 
                     min="0" 
                     value={amountOfficial} 
                     onChange={(e) => setAmountOfficial(e.target.value)} 
-                    placeholder="Boş bırakılırsa gerçek tutara eşit olur" 
+                    placeholder="Boş bırakılırsa tutara eşit olur" 
                     className="w-full border border-gray-300 px-4 py-3 focus:outline-none focus:border-gray-900" 
                   />
-                  <p className="text-xs text-green-600 mt-1">Vergiye tabi tutar (fatura edilmiş)</p>
                 </div>
               </div>
               <div className="mb-6">
@@ -215,9 +214,9 @@ export default function IncomePage() {
         <div className="bg-gradient-to-r from-green-500 to-green-600 text-white p-6 mb-6 border border-green-600">
           <div className="flex justify-between items-center">
             <div>
-              <p className="text-sm uppercase tracking-wide opacity-90">Toplam Gelir (Gerçek)</p>
+              <p className="text-sm uppercase tracking-wide opacity-90">Toplam Gelir</p>
               <p className="text-4xl font-light mt-2">€{grandTotal.toFixed(2)}</p>
-              <p className="text-xs opacity-75 mt-1 bg-green-700 inline-block px-2 py-1 rounded">Resmi: €{grandTotalOfficial.toFixed(2)}</p>
+              <p className="text-xs opacity-75 mt-1 bg-green-700 inline-block px-2 py-1 rounded">Esas: €{grandTotalOfficial.toFixed(2)}</p>
               <p className="text-sm opacity-75 mt-2">{transactions.length} işlem</p>
             </div>
             <div className="text-right"><p className="text-sm opacity-90">{new Date(filterStartDate).toLocaleDateString('tr-TR')} - {new Date(filterEndDate).toLocaleDateString('tr-TR')}</p></div>
@@ -237,9 +236,9 @@ export default function IncomePage() {
                     <p className="text-sm text-gray-600 mt-1">{summary.transactions.length} işlem</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm text-gray-600">Gün Sonu Toplamı (Gerçek)</p>
+                    <p className="text-sm text-gray-600">Gün Sonu Toplamı</p>
                     <p className="text-2xl font-semibold text-gray-900">€{summary.total.toFixed(2)}</p>
-                    <p className="text-xs text-green-600 mt-1">Resmi: €{summary.transactions.reduce((sum, t) => sum + Number(t.amount_official || t.amount), 0).toFixed(2)}</p>
+                    <p className="text-xs text-green-600 mt-1">Esas: €{summary.transactions.reduce((sum, t) => sum + Number(t.amount_official || t.amount), 0).toFixed(2)}</p>
                   </div>
                 </div>
                 <div className="overflow-x-auto">
