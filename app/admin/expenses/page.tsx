@@ -16,6 +16,7 @@ interface Expense {
   id: string;
   category_id: string;
   amount: number;
+  amount_official: number;
   description: string;
   expense_date: string;
   invoice_number: string | null;
@@ -37,6 +38,7 @@ export default function ExpensesPage() {
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [categoryId, setCategoryId] = useState('');
   const [amount, setAmount] = useState('');
+  const [amountOfficial, setAmountOfficial] = useState('');
   const [description, setDescription] = useState('');
   const [vendor, setVendor] = useState('');
   const [invoiceNumber, setInvoiceNumber] = useState('');
@@ -124,6 +126,19 @@ export default function ExpensesPage() {
       return;
     }
 
+    const amountNum = parseFloat(amount);
+    if (isNaN(amountNum) || amountNum <= 0) {
+      toast.error('Lütfen geçerli bir tutar giriniz.');
+      return;
+    }
+
+    // Resmi tutar girilmemişse, gerçek tutara eşitle
+    const amountOfficialNum = amountOfficial ? parseFloat(amountOfficial) : amountNum;
+    if (isNaN(amountOfficialNum) || amountOfficialNum < 0) {
+      toast.error('Lütfen geçerli bir resmi tutar giriniz.');
+      return;
+    }
+
     try {
       setSubmitting(true);
 
@@ -131,7 +146,8 @@ export default function ExpensesPage() {
         .from('expenses')
         .insert({
           category_id: categoryId,
-          amount: parseFloat(amount),
+          amount: amountNum,
+          amount_official: amountOfficialNum,
           description,
           expense_date: selectedDate,
           vendor: vendor || null,
@@ -158,6 +174,7 @@ export default function ExpensesPage() {
     setSelectedDate(new Date().toISOString().split('T')[0]);
     setCategoryId('');
     setAmount('');
+    setAmountOfficial('');
     setDescription('');
     setVendor('');
     setInvoiceNumber('');
@@ -191,6 +208,7 @@ export default function ExpensesPage() {
   };
 
   const totalExpenses = expenses.reduce((sum, exp) => sum + Number(exp.amount), 0);
+  const totalExpensesOfficial = expenses.reduce((sum, exp) => sum + Number(exp.amount_official || exp.amount), 0);
 
   // Group categories for nicer selects
   const topLevel = categories.filter(c => !c.parent_id);
@@ -279,7 +297,7 @@ export default function ExpensesPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 <div>
                   <label className="block text-sm uppercase tracking-wide text-gray-700 mb-2">
-                    Tutar (€) *
+                    Gerçek Tutar (€) *
                   </label>
                   <input
                     type="number"
@@ -290,8 +308,26 @@ export default function ExpensesPage() {
                     className="w-full border border-gray-300 px-4 py-3 focus:outline-none focus:border-gray-900"
                     required
                   />
+                  <p className="text-xs text-gray-500 mt-1">Kasadan çıkan toplam tutar</p>
                 </div>
 
+                <div>
+                  <label className="block text-sm uppercase tracking-wide text-gray-700 mb-2">
+                    Resmi Tutar (€)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={amountOfficial}
+                    onChange={(e) => setAmountOfficial(e.target.value)}
+                    placeholder="Boş bırakılırsa gerçek tutara eşit olur"
+                    className="w-full border border-gray-300 px-4 py-3 focus:outline-none focus:border-gray-900"
+                  />
+                  <p className="text-xs text-green-600 mt-1">Vergiye tabi tutar (fatura edilmiş)</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 <div>
                   <label className="block text-sm uppercase tracking-wide text-gray-700 mb-2">
                     Ödeme Yöntemi
@@ -305,6 +341,19 @@ export default function ExpensesPage() {
                     <option value="Kredi Kartı">Kredi Kartı</option>
                     <option value="Banka Transferi">Banka Transferi</option>
                   </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm uppercase tracking-wide text-gray-700 mb-2">
+                    Fatura Numarası
+                  </label>
+                  <input
+                    type="text"
+                    value={invoiceNumber}
+                    onChange={(e) => setInvoiceNumber(e.target.value)}
+                    placeholder="Fatura no..."
+                    className="w-full border border-gray-300 px-4 py-3 focus:outline-none focus:border-gray-900"
+                  />
                 </div>
               </div>
 
@@ -322,32 +371,17 @@ export default function ExpensesPage() {
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                <div>
-                  <label className="block text-sm uppercase tracking-wide text-gray-700 mb-2">
-                    Tedarikçi
-                  </label>
-                  <input
-                    type="text"
-                    value={vendor}
-                    onChange={(e) => setVendor(e.target.value)}
-                    placeholder="Tedarikçi adı..."
-                    className="w-full border border-gray-300 px-4 py-3 focus:outline-none focus:border-gray-900"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm uppercase tracking-wide text-gray-700 mb-2">
-                    Fatura Numarası
-                  </label>
-                  <input
-                    type="text"
-                    value={invoiceNumber}
-                    onChange={(e) => setInvoiceNumber(e.target.value)}
-                    placeholder="Fatura no..."
-                    className="w-full border border-gray-300 px-4 py-3 focus:outline-none focus:border-gray-900"
-                  />
-                </div>
+              <div className="mb-6">
+                <label className="block text-sm uppercase tracking-wide text-gray-700 mb-2">
+                  Tedarikçi
+                </label>
+                <input
+                  type="text"
+                  value={vendor}
+                  onChange={(e) => setVendor(e.target.value)}
+                  placeholder="Tedarikçi adı..."
+                  className="w-full border border-gray-300 px-4 py-3 focus:outline-none focus:border-gray-900"
+                />
               </div>
 
               <div className="flex gap-4">
@@ -445,10 +479,13 @@ export default function ExpensesPage() {
         {/* Summary */}
         <div className="bg-white border border-gray-200 p-6 mb-8">
           <div className="flex justify-between items-center">
-            <h3 className="text-lg font-light uppercase tracking-wide">Toplam Gider</h3>
-            <p className="text-3xl font-light text-red-600">€{totalExpenses.toFixed(2)}</p>
+            <div>
+              <h3 className="text-lg font-light uppercase tracking-wide">Toplam Gider (Gerçek)</h3>
+              <p className="text-3xl font-light text-gray-900 mt-2">€{totalExpenses.toFixed(2)}</p>
+              <p className="text-xs text-green-600 mt-1 bg-green-50 inline-block px-2 py-1 rounded">Resmi: €{totalExpensesOfficial.toFixed(2)}</p>
+            </div>
+            <p className="text-sm text-gray-500">{expenses.length} kayıt gösteriliyor</p>
           </div>
-          <p className="text-sm text-gray-500 mt-2">{expenses.length} kayıt gösteriliyor</p>
         </div>
 
         {/* Expenses List */}
@@ -494,8 +531,9 @@ export default function ExpensesPage() {
                       <td className="px-6 py-4 text-sm text-gray-600">
                         {expense.vendor || '-'}
                       </td>
-                      <td className="px-6 py-4 text-sm text-right font-medium text-red-600">
-                        €{Number(expense.amount).toFixed(2)}
+                      <td className="px-6 py-4 text-right">
+                        <div className="font-medium text-gray-900">€{Number(expense.amount).toFixed(2)}</div>
+                        <div className="text-xs text-green-600 mt-0.5">€{Number(expense.amount_official || expense.amount).toFixed(2)}</div>
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-600">
                         {expense.payment_method || '-'}

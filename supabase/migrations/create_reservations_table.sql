@@ -21,6 +21,10 @@ CREATE INDEX IF NOT EXISTS idx_reservations_created_at ON reservations(created_a
 -- RLS (Row Level Security) aktif et
 ALTER TABLE reservations ENABLE ROW LEVEL SECURITY;
 
+-- Eski policy'leri kaldır (varsa)
+DROP POLICY IF EXISTS "Admin users can do everything" ON reservations;
+DROP POLICY IF EXISTS "Anyone can insert reservations" ON reservations;
+
 -- Admin kullanıcılar için tüm işlemlere izin ver
 CREATE POLICY "Admin users can do everything" ON reservations
   FOR ALL
@@ -43,6 +47,9 @@ BEGIN
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+
+-- Eski trigger'ı kaldır (varsa)
+DROP TRIGGER IF EXISTS update_reservations_updated_at ON reservations;
 
 -- Trigger ekle
 CREATE TRIGGER update_reservations_updated_at

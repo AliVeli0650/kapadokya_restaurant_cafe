@@ -7,21 +7,33 @@ import Link from 'next/link';
 
 interface DashboardStats {
   todayIncome: number;
+  todayIncomeOfficial: number;
   todayExpense: number;
+  todayExpenseOfficial: number;
   todayProfit: number;
+  todayProfitOfficial: number;
   monthIncome: number;
+  monthIncomeOfficial: number;
   monthExpense: number;
+  monthExpenseOfficial: number;
   monthProfit: number;
+  monthProfitOfficial: number;
 }
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState<DashboardStats>({
     todayIncome: 0,
+    todayIncomeOfficial: 0,
     todayExpense: 0,
+    todayExpenseOfficial: 0,
     todayProfit: 0,
+    todayProfitOfficial: 0,
     monthIncome: 0,
+    monthIncomeOfficial: 0,
     monthExpense: 0,
+    monthExpenseOfficial: 0,
     monthProfit: 0,
+    monthProfitOfficial: 0,
   });
   const [loading, setLoading] = useState(true);
 
@@ -38,41 +50,51 @@ export default function AdminDashboard() {
       // Bugünün geliri
       const { data: todayIncomeData } = await supabase
         .from('income_transactions')
-        .select('amount')
+        .select('amount, amount_official')
         .eq('transaction_date', today);
 
       // Bugünün gideri
       const { data: todayExpenseData } = await supabase
         .from('expenses')
-        .select('amount')
+        .select('amount, amount_official')
         .eq('expense_date', today);
 
       // Ayın geliri
       const { data: monthIncomeData } = await supabase
         .from('income_transactions')
-        .select('amount')
+        .select('amount, amount_official')
         .gte('transaction_date', firstDayOfMonth)
         .lte('transaction_date', lastDayOfMonth);
 
       // Ayın gideri
       const { data: monthExpenseData } = await supabase
         .from('expenses')
-        .select('amount')
+        .select('amount, amount_official')
         .gte('expense_date', firstDayOfMonth)
         .lte('expense_date', lastDayOfMonth);
 
       const todayIncome = todayIncomeData?.reduce((sum, t) => sum + Number(t.amount), 0) || 0;
+      const todayIncomeOfficial = todayIncomeData?.reduce((sum, t) => sum + Number(t.amount_official || t.amount), 0) || 0;
       const todayExpense = todayExpenseData?.reduce((sum, e) => sum + Number(e.amount), 0) || 0;
+      const todayExpenseOfficial = todayExpenseData?.reduce((sum, e) => sum + Number(e.amount_official || e.amount), 0) || 0;
       const monthIncome = monthIncomeData?.reduce((sum, t) => sum + Number(t.amount), 0) || 0;
+      const monthIncomeOfficial = monthIncomeData?.reduce((sum, t) => sum + Number(t.amount_official || t.amount), 0) || 0;
       const monthExpense = monthExpenseData?.reduce((sum, e) => sum + Number(e.amount), 0) || 0;
+      const monthExpenseOfficial = monthExpenseData?.reduce((sum, e) => sum + Number(e.amount_official || e.amount), 0) || 0;
 
       setStats({
         todayIncome,
+        todayIncomeOfficial,
         todayExpense,
+        todayExpenseOfficial,
         todayProfit: todayIncome - todayExpense,
+        todayProfitOfficial: todayIncomeOfficial - todayExpenseOfficial,
         monthIncome,
+        monthIncomeOfficial,
         monthExpense,
+        monthExpenseOfficial,
         monthProfit: monthIncome - monthExpense,
+        monthProfitOfficial: monthIncomeOfficial - monthExpenseOfficial,
       });
     } catch (error) {
       console.error('Dashboard stats yüklenirken hata:', error);
@@ -105,20 +127,23 @@ export default function AdminDashboard() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             
             <div className="bg-white p-6 border border-gray-200">
-              <p className="text-sm uppercase tracking-wide text-gray-500 mb-2">Ciro</p>
-              <p className="text-3xl font-light text-green-600">€{stats.todayIncome.toFixed(2)}</p>
+              <p className="text-sm uppercase tracking-wide text-gray-500 mb-2">Ciro (Gerçek)</p>
+              <p className="text-3xl font-light text-gray-900">€{stats.todayIncome.toFixed(2)}</p>
+              <p className="text-xs text-green-600 mt-1 bg-green-50 inline-block px-2 py-0.5 rounded">Resmi: €{stats.todayIncomeOfficial.toFixed(2)}</p>
             </div>
 
             <div className="bg-white p-6 border border-gray-200">
-              <p className="text-sm uppercase tracking-wide text-gray-500 mb-2">Gider</p>
-              <p className="text-3xl font-light text-red-600">€{stats.todayExpense.toFixed(2)}</p>
+              <p className="text-sm uppercase tracking-wide text-gray-500 mb-2">Gider (Gerçek)</p>
+              <p className="text-3xl font-light text-gray-900">€{stats.todayExpense.toFixed(2)}</p>
+              <p className="text-xs text-green-600 mt-1 bg-green-50 inline-block px-2 py-0.5 rounded">Resmi: €{stats.todayExpenseOfficial.toFixed(2)}</p>
             </div>
 
             <div className="bg-white p-6 border border-gray-200">
-              <p className="text-sm uppercase tracking-wide text-gray-500 mb-2">Kar/Zarar</p>
+              <p className="text-sm uppercase tracking-wide text-gray-500 mb-2">Kar/Zarar (Gerçek)</p>
               <p className={`text-3xl font-light ${stats.todayProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                 €{stats.todayProfit.toFixed(2)}
               </p>
+              <p className="text-xs text-green-600 mt-1 bg-green-50 inline-block px-2 py-0.5 rounded">Resmi: €{stats.todayProfitOfficial.toFixed(2)}</p>
             </div>
 
           </div>
@@ -130,20 +155,23 @@ export default function AdminDashboard() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             
             <div className="bg-white p-6 border border-gray-200">
-              <p className="text-sm uppercase tracking-wide text-gray-500 mb-2">Ciro</p>
-              <p className="text-3xl font-light text-green-600">€{stats.monthIncome.toFixed(2)}</p>
+              <p className="text-sm uppercase tracking-wide text-gray-500 mb-2">Ciro (Gerçek)</p>
+              <p className="text-3xl font-light text-gray-900">€{stats.monthIncome.toFixed(2)}</p>
+              <p className="text-xs text-green-600 mt-1 bg-green-50 inline-block px-2 py-0.5 rounded">Resmi: €{stats.monthIncomeOfficial.toFixed(2)}</p>
             </div>
 
             <div className="bg-white p-6 border border-gray-200">
-              <p className="text-sm uppercase tracking-wide text-gray-500 mb-2">Toplam Gider</p>
-              <p className="text-3xl font-light text-red-600">€{stats.monthExpense.toFixed(2)}</p>
+              <p className="text-sm uppercase tracking-wide text-gray-500 mb-2">Toplam Gider (Gerçek)</p>
+              <p className="text-3xl font-light text-gray-900">€{stats.monthExpense.toFixed(2)}</p>
+              <p className="text-xs text-green-600 mt-1 bg-green-50 inline-block px-2 py-0.5 rounded">Resmi: €{stats.monthExpenseOfficial.toFixed(2)}</p>
             </div>
 
             <div className="bg-white p-6 border border-gray-200">
-              <p className="text-sm uppercase tracking-wide text-gray-500 mb-2">Net Kar/Zarar</p>
+              <p className="text-sm uppercase tracking-wide text-gray-500 mb-2">Net Kar/Zarar (Gerçek)</p>
               <p className={`text-3xl font-light ${stats.monthProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                 €{stats.monthProfit.toFixed(2)}
               </p>
+              <p className="text-xs text-green-600 mt-1 bg-green-50 inline-block px-2 py-0.5 rounded">Resmi: €{stats.monthProfitOfficial.toFixed(2)}</p>
             </div>
 
           </div>
