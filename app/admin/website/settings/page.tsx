@@ -7,8 +7,7 @@ import toast from 'react-hot-toast';
 interface SettingRow { id: string; key: string; value: string; }
 
 export default function SiteSettingsPage() {
-  const [lieferandoUrl, setLieferandoUrl] = useState('');
-  const [orderButtonLabel, setOrderButtonLabel] = useState('');
+  const [whatsappNumber, setWhatsappNumber] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -21,8 +20,7 @@ export default function SiteSettingsPage() {
       if (error) throw error;
       const map: Record<string, string> = {};
       (data || []).forEach((r: SettingRow) => { map[r.key] = r.value; });
-      setLieferandoUrl(map['lieferando_url'] || '');
-      setOrderButtonLabel(map['online_order_button_label'] || 'Online Bestellen');
+      setWhatsappNumber(map['whatsapp_business_number'] || '');
     } catch (e: any) {
       toast.error('Ayarlar yüklenemedi: ' + e.message);
     } finally {
@@ -39,10 +37,17 @@ export default function SiteSettingsPage() {
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
+    if (!whatsappNumber.trim()) {
+      toast.error('WhatsApp numarası boş olamaz');
+      return;
+    }
+    if (!/^[\d+]+$/.test(whatsappNumber.trim())) {
+      toast.error('Geçersiz format. Sadece rakam ve + kullanın (örn: +4917612345678)');
+      return;
+    }
     setSaving(true);
     try {
-      await saveSetting('lieferando_url', lieferandoUrl.trim());
-      await saveSetting('online_order_button_label', orderButtonLabel.trim());
+      await saveSetting('whatsapp_business_number', whatsappNumber.trim());
       toast.success('Kaydedildi');
       load();
     } catch (e: any) {
@@ -55,37 +60,40 @@ export default function SiteSettingsPage() {
   return (
     <div className="min-h-screen">
       <div className="max-w-3xl mx-auto px-6 py-8">
-        <h1 className="text-3xl font-light tracking-wide mb-6">⚙️ Site Ayarları</h1>
-        <p className="text-sm text-gray-600 mb-6">Lieferando yönlendirme ve online sipariş buton metni gibi genel ayarları yönetin.</p>
+        <h1 className="text-3xl font-light tracking-wide mb-2">⚙️ WhatsApp & Site Ayarları</h1>
+        <p className="text-sm text-gray-600 mb-6">WhatsApp Business numarasını ve site genel ayarlarını yönetin.</p>
 
         {loading ? (
           <div className="p-6 text-gray-500">Yükleniyor...</div>
         ) : (
           <form onSubmit={handleSave} className="space-y-6 bg-white border border-gray-200 p-6">
             <div>
-              <label className="block text-xs uppercase tracking-wide text-gray-600 mb-2">Lieferando URL</label>
-              <input
-                type="url"
-                value={lieferandoUrl}
-                onChange={e => setLieferandoUrl(e.target.value)}
-                placeholder="https://www.lieferando.de/en/restaurant-adresiniz"
-                className="w-full border px-3 py-2 text-sm"
-              />
-            </div>
-            <div>
-              <label className="block text-xs uppercase tracking-wide text-gray-600 mb-2">Online Sipariş Buton Metni</label>
+              <label className="block text-xs uppercase tracking-wide text-gray-600 mb-2">WhatsApp Business Numarası</label>
               <input
                 type="text"
-                value={orderButtonLabel}
-                onChange={e => setOrderButtonLabel(e.target.value)}
+                value={whatsappNumber}
+                onChange={e => setWhatsappNumber(e.target.value)}
+                placeholder="+4917612345678"
                 className="w-full border px-3 py-2 text-sm"
+                required
               />
+              <p className="text-xs text-gray-500 mt-2">Sadece rakam ve + işareti kullanın. Örn: +4917612345678</p>
             </div>
             <div className="flex gap-3">
               <button type="submit" disabled={saving} className="bg-gray-900 text-white px-6 py-2 text-sm disabled:opacity-50">
                 {saving ? 'Kaydediliyor...' : 'Kaydet'}
               </button>
               <button type="button" onClick={load} className="border px-6 py-2 text-sm">Yenile</button>
+              {whatsappNumber && (
+                <a
+                  href={`https://wa.me/${whatsappNumber.replace(/[^0-9+]/g, '')}?text=Test mesajı - Kapadokya Restaurant`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 bg-green-600 text-white px-6 py-2 text-sm hover:bg-green-700"
+                >
+                  Test Mesajı Gönder
+                </a>
+              )}
             </div>
           </form>
         )}

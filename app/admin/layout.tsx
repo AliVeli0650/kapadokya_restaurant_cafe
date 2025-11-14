@@ -44,23 +44,21 @@ function Sidebar({ onSignOut, isOpen, onClose }: { onSignOut: () => void; isOpen
         </div>
         <nav className="py-4 overflow-y-auto h-[calc(100vh-4rem)] lg:h-[calc(100vh-5rem)]">
           <div className="px-2 space-y-1">
-            <p className="px-4 text-xs uppercase tracking-wide text-gray-500 font-semibold mt-2 mb-1">Finans Yönetimi</p>
-            <Link href="/admin" onClick={onClose} className="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 rounded">📊 Dashboard</Link>
-            <Link href="/admin/income" onClick={onClose} className="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 rounded">💰 Gelir Yönetimi</Link>
-            <Link href="/admin/expenses" onClick={onClose} className="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 rounded">💸 Gider Yönetimi</Link>
+            <Link href="/admin" onClick={onClose} className="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 rounded font-medium">📊 Dashboard</Link>
+            
+            <p className="px-4 text-xs uppercase tracking-wide text-gray-500 font-semibold mt-4 mb-1">Finans</p>
+            <Link href="/admin/income" onClick={onClose} className="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 rounded">💰 Gelir Ekle</Link>
+            <Link href="/admin/expenses" onClick={onClose} className="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 rounded">💸 Gider Ekle</Link>
             <Link href="/admin/reports" onClick={onClose} className="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 rounded">📈 Raporlar</Link>
 
-            <p className="px-4 text-xs uppercase tracking-wide text-gray-500 font-semibold mt-4 mb-1">Müşteri Yönetimi</p>
-            <Link href="/admin/reservations" onClick={onClose} className="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 rounded">📅 Rezervasyonlar</Link>
-
-            <p className="px-4 text-xs uppercase tracking-wide text-gray-500 font-semibold mt-4 mb-1">Web Sitesi</p>
+            <p className="px-4 text-xs uppercase tracking-wide text-gray-500 font-semibold mt-4 mb-1">Menü</p>
             <Link href="/admin/website/menus" onClick={onClose} className="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 rounded">📋 Menü Fotoğrafları</Link>
-            <Link href="/admin/website/dishes" onClick={onClose} className="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 rounded">🍽️ Detaylı Menü</Link>
-            <Link href="/admin/website/settings" onClick={onClose} className="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 rounded">⚙️ Site Ayarları</Link>
+            <Link href="/admin/website/dishes" onClick={onClose} className="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 rounded">🍽️ Online Sipariş Menüsü</Link>
 
             <p className="px-4 text-xs uppercase tracking-wide text-gray-500 font-semibold mt-4 mb-1">Ayarlar</p>
             <Link href="/admin/settings/categories" onClick={onClose} className="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 rounded">📁 Gider Kategorileri</Link>
             <Link href="/admin/settings/income-sources" onClick={onClose} className="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 rounded">🏪 Gelir Kaynakları</Link>
+            <Link href="/admin/website/settings" onClick={onClose} className="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 rounded">⚙️ WhatsApp & Site Ayarları</Link>
             <Link href="/admin/settings/password" onClick={onClose} className="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 rounded">🔐 Şifre Değiştir</Link>
           </div>
         </nav>

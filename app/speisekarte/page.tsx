@@ -122,60 +122,6 @@ export default async function SpeisekartePage() {
         </div>
       )}
 
-      {/* Detailed Menu Section - Detaylı Ürün Listesi */}
-      <div className="max-w-7xl mx-auto px-6 py-16">
-        <div className="text-center mb-12">
-          <p className="text-sm uppercase tracking-widest text-gray-500 mb-2">Unsere Gerichte</p>
-          <h2 className="text-4xl font-light tracking-wide text-gray-900">
-            Detaillierte Speisekarte
-          </h2>
-        </div>
-
-        {categories.length === 0 ? (
-          <div className="text-center py-16 border-2 border-dashed border-gray-300 bg-white">
-            <p className="text-lg text-gray-500">Keine Gerichte verfügbar</p>
-          </div>
-        ) : (
-          <div className="space-y-16">
-            {categories.map((category: Category) => {
-              const categoryDishes = dishes.filter((d: Dish) => d.category_id === category.id);
-              if (categoryDishes.length === 0) return null;
-
-              return (
-                <section key={category.id} className="bg-white border border-gray-200 p-8 shadow-sm">
-                  <h2 className="text-3xl font-light tracking-wide mb-8 pb-4 border-b-2 border-gray-900">
-                    {category.name_de}
-                  </h2>
-                  <div className="grid md:grid-cols-2 gap-6">
-                    {categoryDishes.map((dish: Dish) => (
-                      <div key={dish.id} className="flex gap-4 p-4 hover:bg-gray-50 transition-colors rounded">
-                        {dish.image_url && (
-                          <div className="w-24 h-24 flex-shrink-0 bg-gray-100 overflow-hidden rounded">
-                            <img 
-                              src={dish.image_url} 
-                              alt={dish.name_de} 
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
-                        )}
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-start justify-between gap-2 mb-2">
-                            <h3 className="text-lg font-medium text-gray-900">{dish.name_de}</h3>
-                            <span className="text-lg font-semibold text-gray-900 whitespace-nowrap">€{dish.price.toFixed(2)}</span>
-                          </div>
-                          {dish.description_de && (
-                            <p className="text-sm text-gray-600 leading-relaxed">{dish.description_de}</p>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </section>
-              );
-            })}
-          </div>
-        )}
-      </div>
     </div>
   );
 }

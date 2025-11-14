@@ -31,6 +31,16 @@ export default function DishesPage() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'categories' | 'dishes'>('categories');
 
+  // Filters for dishes tab
+  const [filterCategoryId, setFilterCategoryId] = useState<string>('');
+  const [filterSearch, setFilterSearch] = useState<string>('');
+  const [filterActive, setFilterActive] = useState<'all' | 'active' | 'inactive'>('all');
+  const [filterHasImage, setFilterHasImage] = useState<'all' | 'with' | 'without'>('all');
+  const [filterDishOfDay, setFilterDishOfDay] = useState<'all' | 'yes' | 'no'>('all');
+  const [filterPriceMin, setFilterPriceMin] = useState<string>('');
+  const [filterPriceMax, setFilterPriceMax] = useState<string>('');
+  const [sortBy, setSortBy] = useState<'position' | 'name' | 'priceAsc' | 'priceDesc'>('position');
+
   // Category Form State
   const [editingCategory, setEditingCategory] = useState<string | null>(null);
   const [categoryForm, setCategoryForm] = useState({
@@ -55,6 +65,10 @@ export default function DishesPage() {
   });
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>('');
+
+  // Modal states
+  const [showCategoryModal, setShowCategoryModal] = useState(false);
+  const [showDishModal, setShowDishModal] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -95,8 +109,7 @@ export default function DishesPage() {
         }
         toast.success('Kategori eklendi');
       }
-      setCategoryForm({ name_de: '', name_tr: '', position: 0, is_active: true });
-      setEditingCategory(null);
+      closeCategoryModal();
       loadData();
     } catch (error: any) {
       console.error('Kategori kaydetme hatası:', error);
@@ -107,6 +120,19 @@ export default function DishesPage() {
   function handleEditCategory(cat: Category) {
     setEditingCategory(cat.id);
     setCategoryForm({ name_de: cat.name_de, name_tr: cat.name_tr, position: cat.position, is_active: cat.is_active });
+    setShowCategoryModal(true);
+  }
+
+  function handleNewCategory() {
+    setEditingCategory(null);
+    setCategoryForm({ name_de: '', name_tr: '', position: 0, is_active: true });
+    setShowCategoryModal(true);
+  }
+
+  function closeCategoryModal() {
+    setShowCategoryModal(false);
+    setEditingCategory(null);
+    setCategoryForm({ name_de: '', name_tr: '', position: 0, is_active: true });
   }
 
   async function handleDeleteCategory(id: string) {
@@ -166,10 +192,7 @@ export default function DishesPage() {
         toast.success('Ürün eklendi');
       }
 
-      setDishForm({ category_id: '', name_de: '', name_tr: '', description_de: '', description_tr: '', price: '', position: 0, is_active: true, is_dish_of_the_day: false });
-      setEditingDish(null);
-      setImageFile(null);
-      setImagePreview('');
+      closeDishModal();
       loadData();
     } catch (error: any) {
       console.error('Ürün kaydetme hatası:', error);
@@ -191,6 +214,23 @@ export default function DishesPage() {
       is_dish_of_the_day: dish.is_dish_of_the_day || false,
     });
     setImagePreview(dish.image_url || '');
+    setShowDishModal(true);
+  }
+
+  function handleNewDish() {
+    setEditingDish(null);
+    setDishForm({ category_id: '', name_de: '', name_tr: '', description_de: '', description_tr: '', price: '', position: 0, is_active: true, is_dish_of_the_day: false });
+    setImageFile(null);
+    setImagePreview('');
+    setShowDishModal(true);
+  }
+
+  function closeDishModal() {
+    setShowDishModal(false);
+    setEditingDish(null);
+    setDishForm({ category_id: '', name_de: '', name_tr: '', description_de: '', description_tr: '', price: '', position: 0, is_active: true, is_dish_of_the_day: false });
+    setImageFile(null);
+    setImagePreview('');
   }
 
   async function handleDeleteDish(id: string) {
@@ -241,58 +281,14 @@ export default function DishesPage() {
       {/* Categories Tab */}
       {activeTab === 'categories' && (
         <>
-          <form onSubmit={handleCategorySubmit} className="bg-white p-6 rounded shadow mb-6">
-            <h2 className="text-xl font-semibold mb-4">{editingCategory ? 'Kategori Düzenle' : 'Yeni Kategori Ekle'}</h2>
-            <div className="grid grid-cols-2 gap-4 mb-4">
-              <input
-                type="text"
-                placeholder="Kategori Adı (Almanca)"
-                value={categoryForm.name_de}
-                onChange={(e) => setCategoryForm({ ...categoryForm, name_de: e.target.value })}
-                className="border p-2 rounded"
-                required
-              />
-              <input
-                type="text"
-                placeholder="Kategori Adı (Türkçe)"
-                value={categoryForm.name_tr}
-                onChange={(e) => setCategoryForm({ ...categoryForm, name_tr: e.target.value })}
-                className="border p-2 rounded"
-              />
-              <input
-                type="number"
-                placeholder="Sıra"
-                value={categoryForm.position}
-                onChange={(e) => setCategoryForm({ ...categoryForm, position: parseInt(e.target.value) })}
-                className="border p-2 rounded"
-              />
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={categoryForm.is_active}
-                  onChange={(e) => setCategoryForm({ ...categoryForm, is_active: e.target.checked })}
-                />
-                Aktif
-              </label>
-            </div>
-            <div className="flex gap-2">
-              <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded">
-                {editingCategory ? 'Güncelle' : 'Ekle'}
-              </button>
-              {editingCategory && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setEditingCategory(null);
-                    setCategoryForm({ name_de: '', name_tr: '', position: 0, is_active: true });
-                  }}
-                  className="bg-gray-400 text-white px-4 py-2 rounded"
-                >
-                  İptal
-                </button>
-              )}
-            </div>
-          </form>
+          <div className="mb-6">
+            <button
+              onClick={handleNewCategory}
+              className="bg-blue-600 text-white px-6 py-3 rounded hover:bg-blue-700"
+            >
+              + Yeni Kategori Ekle
+            </button>
+          </div>
 
           <div className="bg-white p-6 rounded shadow">
             <h2 className="text-xl font-semibold mb-4">Kategoriler</h2>
@@ -328,6 +324,133 @@ export default function DishesPage() {
       {/* Dishes Tab */}
       {activeTab === 'dishes' && (
         <>
+          {/* Add New Dish Button */}
+          <div className="mb-6">
+            <button
+              onClick={handleNewDish}
+              className="bg-blue-600 text-white px-6 py-3 rounded hover:bg-blue-700"
+            >
+              + Yeni Ürün Ekle
+            </button>
+          </div>
+
+          {/* Filters Bar */}
+          <div className="bg-white p-4 rounded shadow mb-6 sticky top-0 z-10 border border-gray-200">
+            <div className="grid grid-cols-1 lg:grid-cols-6 gap-3">
+              <div>
+                <label className="block text-xs text-gray-600 mb-1">Kategori</label>
+                <select
+                  value={filterCategoryId}
+                  onChange={(e) => setFilterCategoryId(e.target.value)}
+                  className="w-full border p-2 rounded"
+                >
+                  <option value="">Tümü</option>
+                  {categories.map((c) => (
+                    <option key={c.id} value={c.id}>{c.name_de}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="lg:col-span-2">
+                <label className="block text-xs text-gray-600 mb-1">Ara</label>
+                <input
+                  type="text"
+                  value={filterSearch}
+                  onChange={(e) => setFilterSearch(e.target.value)}
+                  placeholder="İsim veya açıklama..."
+                  className="w-full border p-2 rounded"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-gray-600 mb-1">Durum</label>
+                <select
+                  value={filterActive}
+                  onChange={(e) => setFilterActive(e.target.value as any)}
+                  className="w-full border p-2 rounded"
+                >
+                  <option value="all">Tümü</option>
+                  <option value="active">Aktif</option>
+                  <option value="inactive">Pasif</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs text-gray-600 mb-1">Resim</label>
+                <select
+                  value={filterHasImage}
+                  onChange={(e) => setFilterHasImage(e.target.value as any)}
+                  className="w-full border p-2 rounded"
+                >
+                  <option value="all">Farketmez</option>
+                  <option value="with">Resimli</option>
+                  <option value="without">Resimsiz</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs text-gray-600 mb-1">Günün Yemeği</label>
+                <select
+                  value={filterDishOfDay}
+                  onChange={(e) => setFilterDishOfDay(e.target.value as any)}
+                  className="w-full border p-2 rounded"
+                >
+                  <option value="all">Tümü</option>
+                  <option value="yes">Evet</option>
+                  <option value="no">Hayır</option>
+                </select>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 lg:grid-cols-6 gap-3 mt-3">
+              <div>
+                <label className="block text-xs text-gray-600 mb-1">Min €</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={filterPriceMin}
+                  onChange={(e) => setFilterPriceMin(e.target.value)}
+                  className="w-full border p-2 rounded"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-gray-600 mb-1">Max €</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={filterPriceMax}
+                  onChange={(e) => setFilterPriceMax(e.target.value)}
+                  className="w-full border p-2 rounded"
+                />
+              </div>
+              <div className="lg:col-span-2">
+                <label className="block text-xs text-gray-600 mb-1">Sırala</label>
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as any)}
+                  className="w-full border p-2 rounded"
+                >
+                  <option value="position">Sıra</option>
+                  <option value="name">İsim (A→Z)</option>
+                  <option value="priceAsc">Fiyat (Artan)</option>
+                  <option value="priceDesc">Fiyat (Azalan)</option>
+                </select>
+              </div>
+              <div className="flex items-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFilterCategoryId('');
+                    setFilterSearch('');
+                    setFilterActive('all');
+                    setFilterHasImage('all');
+                    setFilterDishOfDay('all');
+                    setFilterPriceMin('');
+                    setFilterPriceMax('');
+                    setSortBy('position');
+                  }}
+                  className="border px-4 py-2 rounded"
+                >
+                  Filtreleri Sıfırla
+                </button>
+              </div>
+            </div>
+          </div>
           <form onSubmit={handleDishSubmit} className="bg-white p-6 rounded shadow mb-6">
             <h2 className="text-xl font-semibold mb-4">{editingDish ? 'Ürün Düzenle' : 'Yeni Ürün Ekle'}</h2>
             <div className="grid grid-cols-2 gap-4 mb-4">
@@ -445,7 +568,32 @@ export default function DishesPage() {
                 </tr>
               </thead>
               <tbody>
-                {dishes.map((dish) => {
+                {dishes
+                  .filter((dish) => {
+                    if (filterCategoryId && dish.category_id !== filterCategoryId) return false;
+                    if (filterActive === 'active' && !dish.is_active) return false;
+                    if (filterActive === 'inactive' && dish.is_active) return false;
+                    if (filterHasImage === 'with' && !dish.image_url) return false;
+                    if (filterHasImage === 'without' && dish.image_url) return false;
+                    if (filterDishOfDay === 'yes' && !dish.is_dish_of_the_day) return false;
+                    if (filterDishOfDay === 'no' && dish.is_dish_of_the_day) return false;
+                    if (filterPriceMin && dish.price < Number(filterPriceMin)) return false;
+                    if (filterPriceMax && dish.price > Number(filterPriceMax)) return false;
+                    if (filterSearch) {
+                      const q = filterSearch.toLowerCase();
+                      const hay = `${dish.name_de||''} ${dish.name_tr||''} ${dish.description_de||''} ${dish.description_tr||''}`.toLowerCase();
+                      if (!hay.includes(q)) return false;
+                    }
+                    return true;
+                  })
+                  .sort((a, b) => {
+                    if (sortBy === 'position') return (a.position || 0) - (b.position || 0);
+                    if (sortBy === 'name') return (a.name_de || '').localeCompare(b.name_de || '');
+                    if (sortBy === 'priceAsc') return (a.price || 0) - (b.price || 0);
+                    if (sortBy === 'priceDesc') return (b.price || 0) - (a.price || 0);
+                    return 0;
+                  })
+                  .map((dish) => {
                   const cat = categories.find((c) => c.id === dish.category_id);
                   return (
                     <tr key={dish.id} className="border-b">
@@ -470,6 +618,221 @@ export default function DishesPage() {
           </div>
         </>
       )}
+
+      {/* Category Modal */}
+      {showCategoryModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <form onSubmit={handleCategorySubmit} className="p-6">
+              <h2 className="text-2xl font-semibold mb-6">{editingCategory ? 'Kategori Düzenle' : 'Yeni Kategori Ekle'}</h2>
+              <div className="grid grid-cols-2 gap-4 mb-6">
+                <div>
+                  <label className="block text-sm font-medium mb-2">Kategori Adı (Almanca) *</label>
+                  <input
+                    type="text"
+                    placeholder="z.B. Suppen"
+                    value={categoryForm.name_de}
+                    onChange={(e) => setCategoryForm({ ...categoryForm, name_de: e.target.value })}
+                    className="w-full border p-2 rounded"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Kategori Adı (Türkçe)</label>
+                  <input
+                    type="text"
+                    placeholder="Örn: Çorbalar"
+                    value={categoryForm.name_tr}
+                    onChange={(e) => setCategoryForm({ ...categoryForm, name_tr: e.target.value })}
+                    className="w-full border p-2 rounded"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Sıra</label>
+                  <input
+                    type="number"
+                    value={categoryForm.position}
+                    onChange={(e) => setCategoryForm({ ...categoryForm, position: parseInt(e.target.value) })}
+                    className="w-full border p-2 rounded"
+                  />
+                </div>
+                <div className="flex items-end">
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={categoryForm.is_active}
+                      onChange={(e) => setCategoryForm({ ...categoryForm, is_active: e.target.checked })}
+                      className="w-4 h-4"
+                    />
+                    <span className="font-medium">Aktif</span>
+                  </label>
+                </div>
+              </div>
+              <div className="flex gap-3 justify-end border-t pt-4">
+                <button
+                  type="button"
+                  onClick={closeCategoryModal}
+                  className="bg-gray-300 text-gray-700 px-6 py-2 rounded hover:bg-gray-400"
+                >
+                  İptal
+                </button>
+                <button type="submit" className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700">
+                  {editingCategory ? 'Güncelle' : 'Ekle'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Dish Modal */}
+      {showDishModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <form onSubmit={handleDishSubmit} className="p-6">
+              <h2 className="text-2xl font-semibold mb-6">{editingDish ? 'Ürün Düzenle' : 'Yeni Ürün Ekle'}</h2>
+              
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2">Kategori *</label>
+                  <select
+                    value={dishForm.category_id}
+                    onChange={(e) => setDishForm({ ...dishForm, category_id: e.target.value })}
+                    className="w-full border p-2 rounded"
+                    required
+                  >
+                    <option value="">Kategori Seçin</option>
+                    {categories.map((cat) => (
+                      <option key={cat.id} value={cat.id}>{cat.name_de}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Fiyat (€) *</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    placeholder="0.00"
+                    value={dishForm.price}
+                    onChange={(e) => setDishForm({ ...dishForm, price: e.target.value })}
+                    className="w-full border p-2 rounded"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2">Ürün Adı (Almanca) *</label>
+                  <input
+                    type="text"
+                    placeholder="z.B. Linseneintopf"
+                    value={dishForm.name_de}
+                    onChange={(e) => setDishForm({ ...dishForm, name_de: e.target.value })}
+                    className="w-full border p-2 rounded"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Ürün Adı (Türkçe)</label>
+                  <input
+                    type="text"
+                    placeholder="Örn: Mercimek Çorbası"
+                    value={dishForm.name_tr}
+                    onChange={(e) => setDishForm({ ...dishForm, name_tr: e.target.value })}
+                    className="w-full border p-2 rounded"
+                  />
+                </div>
+              </div>
+
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-2">Açıklama (Almanca)</label>
+                <textarea
+                  placeholder="Produktbeschreibung..."
+                  value={dishForm.description_de}
+                  onChange={(e) => setDishForm({ ...dishForm, description_de: e.target.value })}
+                  className="w-full border p-2 rounded"
+                  rows={3}
+                />
+              </div>
+
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-2">Açıklama (Türkçe)</label>
+                <textarea
+                  placeholder="Ürün açıklaması..."
+                  value={dishForm.description_tr}
+                  onChange={(e) => setDishForm({ ...dishForm, description_tr: e.target.value })}
+                  className="w-full border p-2 rounded"
+                  rows={3}
+                />
+              </div>
+
+              <div className="grid grid-cols-3 gap-4 mb-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2">Sıra</label>
+                  <input
+                    type="number"
+                    value={dishForm.position}
+                    onChange={(e) => setDishForm({ ...dishForm, position: parseInt(e.target.value) })}
+                    className="w-full border p-2 rounded"
+                  />
+                </div>
+                <div className="flex items-end">
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={dishForm.is_active}
+                      onChange={(e) => setDishForm({ ...dishForm, is_active: e.target.checked })}
+                      className="w-4 h-4"
+                    />
+                    <span className="font-medium">Aktif</span>
+                  </label>
+                </div>
+                <div className="flex items-end">
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={dishForm.is_dish_of_the_day}
+                      onChange={(e) => setDishForm({ ...dishForm, is_dish_of_the_day: e.target.checked })}
+                      className="w-4 h-4"
+                    />
+                    <span className="text-orange-600 font-semibold">⭐ Günün Yemeği</span>
+                  </label>
+                </div>
+              </div>
+
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-2">Ürün Resmi</label>
+                <input 
+                  type="file" 
+                  accept="image/*" 
+                  onChange={handleImageChange} 
+                  className="w-full border p-2 rounded" 
+                />
+                {imagePreview && (
+                  <div className="mt-3">
+                    <img src={imagePreview} alt="Preview" className="w-48 h-48 object-cover rounded border" />
+                  </div>
+                )}
+              </div>
+
+              <div className="flex gap-3 justify-end border-t pt-4">
+                <button
+                  type="button"
+                  onClick={closeDishModal}
+                  className="bg-gray-300 text-gray-700 px-6 py-2 rounded hover:bg-gray-400"
+                >
+                  İptal
+                </button>
+                <button type="submit" className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700">
+                  {editingDish ? 'Güncelle' : 'Ekle'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
