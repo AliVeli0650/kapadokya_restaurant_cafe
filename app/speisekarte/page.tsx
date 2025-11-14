@@ -71,16 +71,12 @@ export default async function SpeisekartePage() {
                 Entdecken Sie unsere köstlichen Gerichte mit frischen Zutaten
               </p>
             </div>
-            {settings.lieferandoUrl && (
-              <a
-                href={settings.lieferandoUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="bg-white text-gray-900 px-6 md:px-8 py-3 md:py-4 text-sm uppercase tracking-wide font-semibold hover:bg-gray-100 transition-colors inline-block text-center"
-              >
-                {settings.orderBtn}
-              </a>
-            )}
+            <a
+              href="/de/bestellen"
+              className="bg-white text-gray-900 px-6 md:px-8 py-3 md:py-4 text-sm uppercase tracking-wide font-semibold hover:bg-gray-100 transition-colors inline-block text-center"
+            >
+              Online Bestellen
+            </a>
           </div>
         </div>
       </div>

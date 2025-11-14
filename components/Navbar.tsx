@@ -57,6 +57,11 @@ export default function Navbar() {
               </Link>
             </li>
             <li>
+              <Link href={`/${currentLocale}/bestellen`} className={`${isHomePage ? 'text-white hover:text-gray-200' : 'text-gray-700 hover:text-gray-900'} transition-colors`}>
+                Bestellen
+              </Link>
+            </li>
+            <li>
               <Link href={`/${currentLocale}/about`} className={`${isHomePage ? 'text-white hover:text-gray-200' : 'text-gray-700 hover:text-gray-900'} transition-colors`}>
                 Über uns
               </Link>
@@ -139,6 +144,13 @@ export default function Navbar() {
                 className="block py-3 text-gray-900 hover:text-gray-600 text-lg border-b border-gray-100"
               >
                 Speisekarte
+              </Link>
+              <Link 
+                href={`/${currentLocale}/bestellen`} 
+                onClick={closeMobileMenu}
+                className="block py-3 text-gray-900 hover:text-gray-600 text-lg border-b border-gray-100"
+              >
+                Bestellen
               </Link>
               <Link 
                 href={`/${currentLocale}/about`} 
