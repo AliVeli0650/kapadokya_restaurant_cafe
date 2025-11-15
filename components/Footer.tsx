@@ -11,6 +11,10 @@ export default function Footer() {
   if (pathname?.startsWith('/admin')) {
     return null;
   }
+
+  // Detect current language
+  const currentLocale = pathname?.startsWith('/de') ? 'de' : pathname?.startsWith('/tr') ? 'tr' : 'de';
+  const isGerman = currentLocale === 'de';
   return (
     <footer className="bg-gray-900 text-gray-300">
       <div className="container mx-auto px-6 lg:px-12 py-16">
@@ -21,8 +25,10 @@ export default function Footer() {
           <div>
             <h3 className="text-white text-xl font-light mb-4 tracking-wide">KAPADOKYA</h3>
             <p className="text-sm leading-relaxed mb-4">
-              Genießen Sie authentische türkische Küche<br />
-              in modernem Ambiente im Herzen von Hagen.
+              {isGerman 
+                ? <>Genießen Sie authentische türkische Küche<br />in modernem Ambiente im Herzen von Hagen.</>
+                : <>Hagen'in kalbinde modern bir atmosferde<br />otantik Türk mutfağının tadını çıkarın.</>
+              }
             </p>
             <div className="space-y-2 text-sm">
               <p>Elberfelder Str. 51</p>
@@ -33,18 +39,20 @@ export default function Footer() {
 
           {/* Opening Hours */}
           <div>
-            <h3 className="text-white text-lg font-light mb-4 tracking-wide uppercase">Öffnungszeiten</h3>
+            <h3 className="text-white text-lg font-light mb-4 tracking-wide uppercase">
+              {isGerman ? 'Öffnungszeiten' : 'Açılış Saatleri'}
+            </h3>
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
-                <span>Montag - Donnerstag</span>
+                <span>{isGerman ? 'Montag - Donnerstag' : 'Pazartesi - Perşembe'}</span>
                 <span>11:00 - 22:00</span>
               </div>
               <div className="flex justify-between">
-                <span>Freitag - Samstag</span>
+                <span>{isGerman ? 'Freitag - Samstag' : 'Cuma - Cumartesi'}</span>
                 <span>11:00 - 23:00</span>
               </div>
               <div className="flex justify-between">
-                <span>Sonntag</span>
+                <span>{isGerman ? 'Sonntag' : 'Pazar'}</span>
                 <span>12:00 - 22:00</span>
               </div>
             </div>
@@ -52,32 +60,29 @@ export default function Footer() {
 
           {/* Quick Links & Social */}
           <div>
-            <h3 className="text-white text-lg font-light mb-4 tracking-wide uppercase">Links</h3>
+            <h3 className="text-white text-lg font-light mb-4 tracking-wide uppercase">
+              {isGerman ? 'Links' : 'Bağlantılar'}
+            </h3>
             <ul className="space-y-2 text-sm mb-6">
               <li>
-                <Link href="/menu" className="hover:text-white transition-colors">
-                  Speisekarte
+                <Link href={`/${currentLocale}/speisekarte`} className="hover:text-white transition-colors">
+                  {isGerman ? 'Speisekarte' : 'Menü'}
                 </Link>
               </li>
               <li>
-                <Link href="/about" className="hover:text-white transition-colors">
-                  Über uns
+                <Link href={`/${currentLocale}/about`} className="hover:text-white transition-colors">
+                  {isGerman ? 'Über uns' : 'Hakkımızda'}
                 </Link>
               </li>
               <li>
-                <Link href="/contact" className="hover:text-white transition-colors">
-                  Reservierung
+                <Link href={`/${currentLocale}/contact`} className="hover:text-white transition-colors">
+                  {isGerman ? 'Reservierung' : 'Rezervasyon'}
                 </Link>
               </li>
               <li>
-                <a 
-                  href="https://www.lieferando.de/speisekarte/kapadokya-restaurant-cafe"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:text-white transition-colors"
-                >
-                  Online bestellen
-                </a>
+                <Link href={`/${currentLocale}/bestellen`} className="hover:text-white transition-colors">
+                  {isGerman ? 'Online bestellen' : 'Online sipariş'}
+                </Link>
               </li>
             </ul>
 
@@ -112,13 +117,13 @@ export default function Footer() {
 
         {/* Bottom Bar */}
         <div className="border-t border-gray-800 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center text-sm">
-          <p>&copy; 2025 Kapadokya Restaurant & Cafe. Alle Rechte vorbehalten.</p>
+          <p>&copy; 2025 Kapadokya Restaurant & Cafe. {isGerman ? 'Alle Rechte vorbehalten.' : 'Tüm hakları saklıdır.'}</p>
           <div className="flex space-x-6 mt-4 md:mt-0">
             <Link href="/impressum" className="hover:text-white transition-colors">
-              Impressum
+              {isGerman ? 'Impressum' : 'Künye'}
             </Link>
             <Link href="/datenschutz" className="hover:text-white transition-colors">
-              Datenschutz
+              {isGerman ? 'Datenschutz' : 'Gizlilik'}
             </Link>
           </div>
         </div>

@@ -88,7 +88,7 @@ export default function HomePage() {
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
             <Link 
-              href="/speisekarte"
+              href={`/${currentLocale}/speisekarte`}
               className="border-2 border-white text-white px-10 py-4 text-sm uppercase tracking-wider hover:bg-white hover:text-gray-900 transition-all duration-300 min-w-[200px] backdrop-blur-sm"
             >
               {isGerman ? 'Speisekarte' : 'Menü'}

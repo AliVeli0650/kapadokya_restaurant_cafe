@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { usePathname } from 'next/navigation';
 import { supabase } from '../../../lib/supabaseClient';
 import toast from 'react-hot-toast';
 import DishDetailModal from './DishDetailModal';
@@ -41,6 +42,10 @@ interface CartItem {
 }
 
 export default function BestellenPage() {
+  const pathname = usePathname();
+  const currentLocale = pathname?.startsWith('/de') ? 'de' : pathname?.startsWith('/tr') ? 'tr' : 'de';
+  const isGerman = currentLocale === 'de';
+
   const [categories, setCategories] = useState<Category[]>([]);
   const [dishes, setDishes] = useState<Dish[]>([]);
   const [allergens, setAllergens] = useState<Allergen[]>([]);
@@ -83,7 +88,7 @@ export default function BestellenPage() {
       setDishes(dishesData || []);
     } catch (error) {
       console.error('Fehler beim Laden des Menüs:', error);
-      toast.error('Menü konnte nicht geladen werden');
+      toast.error(isGerman ? 'Menü konnte nicht geladen werden' : 'Menü yüklenemedi');
     } finally {
       setLoading(false);
     }
@@ -156,6 +161,7 @@ export default function BestellenPage() {
 
   const addToCart = (dish: Dish) => {
     const existingItem = cart.find(item => item.dish.id === dish.id);
+    const dishName = isGerman ? dish.name_de : dish.name_tr;
     
     if (existingItem) {
       setCart(cart.map(item =>
@@ -163,10 +169,10 @@ export default function BestellenPage() {
           ? { ...item, quantity: item.quantity + 1 }
           : item
       ));
-      toast.success(`${dish.name_de} +1`, { duration: 1500 });
+      toast.success(`${dishName} +1`, { duration: 1500 });
     } else {
       setCart([...cart, { dish, quantity: 1 }]);
-      toast.success(`${dish.name_de} hinzugefügt`, { duration: 1500 });
+      toast.success(isGerman ? `${dishName} hinzugefügt` : `${dishName} eklendi`, { duration: 1500 });
     }
   };
 
@@ -197,34 +203,47 @@ export default function BestellenPage() {
 
   const sendWhatsAppOrder = () => {
     if (!customerName || !customerPhone || !customerAddress) {
-      toast.error('Bitte füllen Sie alle Pflichtfelder aus');
+      toast.error(isGerman 
+        ? 'Bitte füllen Sie alle Pflichtfelder aus' 
+        : 'Lütfen tüm zorunlu alanları doldurun');
       return;
     }
 
     if (cart.length === 0) {
-      toast.error('Ihr Warenkorb ist leer');
+      toast.error(isGerman ? 'Ihr Warenkorb ist leer' : 'Sepetiniz boş');
       return;
     }
 
     // WhatsApp mesajını oluştur
-    let message = `*--- NEUE BESTELLUNG ---*\n\n`;
-    message += `*Kunde:* ${customerName}\n`;
-    message += `*Telefon:* ${customerPhone}\n`;
-    message += `*Adresse:* ${customerAddress}\n`;
+    let message = isGerman 
+      ? `*--- NEUE BESTELLUNG ---*\n\n`
+      : `*--- YENİ SİPARİŞ ---*\n\n`;
+    
+    message += isGerman 
+      ? `*Kunde:* ${customerName}\n*Telefon:* ${customerPhone}\n*Adresse:* ${customerAddress}\n`
+      : `*Müşteri:* ${customerName}\n*Telefon:* ${customerPhone}\n*Adres:* ${customerAddress}\n`;
+    
     if (deliveryNote) {
-      message += `*Hinweis:* ${deliveryNote}\n`;
+      message += isGerman 
+        ? `*Hinweis:* ${deliveryNote}\n`
+        : `*Not:* ${deliveryNote}\n`;
     }
-    message += `\n*BESTELLUNG:*\n`;
+    
+    message += isGerman ? `\n*BESTELLUNG:*\n` : `\n*SİPARİŞ:*\n`;
     
     cart.forEach((item, index) => {
-      message += `${index + 1}. ${item.quantity}x ${item.dish.name_de} - €${(item.dish.price * item.quantity).toFixed(2)}\n`;
+      const dishName = isGerman ? item.dish.name_de : item.dish.name_tr;
+      message += `${index + 1}. ${item.quantity}x ${dishName} - €${(item.dish.price * item.quantity).toFixed(2)}\n`;
     });
     
-    message += `\n*GESAMT: €${getTotalPrice().toFixed(2)}*\n\n`;
-    message += `_Bitte bestätigen Sie die Bestellung und teilen Sie die geschätzte Lieferzeit mit._`;
+    message += isGerman 
+      ? `\n*GESAMT: €${getTotalPrice().toFixed(2)}*\n\n_Bitte bestätigen Sie die Bestellung und teilen Sie die geschätzte Lieferzeit mit._`
+      : `\n*TOPLAM: €${getTotalPrice().toFixed(2)}*\n\n_Lütfen siparişi onaylayın ve tahmini teslimat süresini bildirin._`;
 
     if (!whatsappNumber) {
-      toast.error('WhatsApp numarası ayarlanmamış. Lütfen yönetici ile iletişime geçin.');
+      toast.error(isGerman 
+        ? 'WhatsApp-Nummer nicht konfiguriert. Bitte kontaktieren Sie den Administrator.'
+        : 'WhatsApp numarası ayarlanmamış. Lütfen yönetici ile iletişime geçin.');
       return;
     }
     
@@ -237,13 +256,15 @@ export default function BestellenPage() {
     // Yeni sekmede WhatsApp'ı aç
     window.open(whatsappUrl, '_blank');
     
-    toast.success('WhatsApp wird geöffnet...');
+    toast.success(isGerman ? 'WhatsApp wird geöffnet...' : 'WhatsApp açılıyor...');
   };
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <p className="text-gray-500">Menü wird geladen...</p>
+        <p className="text-gray-500">
+          {isGerman ? 'Menü wird geladen...' : 'Menü yükleniyor...'}
+        </p>
       </div>
     );
   }
@@ -253,9 +274,13 @@ export default function BestellenPage() {
       {/* Hero Section */}
       <div className="bg-gray-900 text-white pt-32 pb-12">
         <div className="max-w-7xl mx-auto px-6">
-          <h1 className="text-4xl md:text-5xl font-light tracking-wide mb-3">Online Bestellen</h1>
+          <h1 className="text-4xl md:text-5xl font-light tracking-wide mb-3">
+            {isGerman ? 'Online Bestellen' : 'Online Sipariş'}
+          </h1>
           <p className="text-gray-300 text-lg max-w-2xl">
-            Wählen Sie Ihre Lieblingsgerichte und bestellen Sie direkt über WhatsApp
+            {isGerman 
+              ? 'Wählen Sie Ihre Lieblingsgerichte und bestellen Sie direkt über WhatsApp'
+              : 'Favori yemeklerinizi seçin ve doğrudan WhatsApp üzerinden sipariş verin'}
           </p>
         </div>
       </div>
@@ -269,13 +294,17 @@ export default function BestellenPage() {
               <div className="bg-white border border-gray-200 shadow-sm">
                 <div className="p-4 border-b border-gray-200">
                   <h2 className="text-sm uppercase tracking-wider font-semibold text-gray-900">
-                    Kategorien
+                    {isGerman ? 'Kategorien' : 'Kategoriler'}
                   </h2>
                 </div>
                 <nav className="p-2">
                   {categories.map((category) => {
                     const categoryDishes = dishes.filter(d => d.category_id === category.id);
                     if (categoryDishes.length === 0) return null;
+
+                    const categoryName = isGerman ? category.name_de : category.name_tr;
+                    const displayName = categoryName.split(' / ')[0];
+                    const subName = categoryName.includes(' / ') ? categoryName.split(' / ')[1] : null;
 
                     return (
                       <button
@@ -287,10 +316,10 @@ export default function BestellenPage() {
                             : 'text-gray-700 hover:bg-gray-100'
                         }`}
                       >
-                        <div className="font-medium">{category.name_de.split(' / ')[0]}</div>
-                        {category.name_de.includes(' / ') && (
+                        <div className="font-medium">{displayName}</div>
+                        {subName && (
                           <div className="text-xs mt-0.5 opacity-75">
-                            {category.name_de.split(' / ')[1]}
+                            {subName}
                           </div>
                         )}
                       </button>
@@ -305,13 +334,19 @@ export default function BestellenPage() {
           <main className="flex-1 min-w-0">
             {categories.length === 0 ? (
               <div className="text-center py-16 bg-white border border-gray-200">
-                <p className="text-lg text-gray-500">Keine Gerichte verfügbar</p>
+                <p className="text-lg text-gray-500">
+                  {isGerman ? 'Keine Gerichte verfügbar' : 'Mevcut yemek yok'}
+                </p>
               </div>
             ) : (
               <div className="space-y-12">
                 {categories.map((category) => {
                   const categoryDishes = dishes.filter(d => d.category_id === category.id);
                   if (categoryDishes.length === 0) return null;
+
+                  const categoryName = isGerman ? category.name_de : category.name_tr;
+                  const displayName = categoryName.split(' / ')[0];
+                  const subName = categoryName.includes(' / ') ? categoryName.split(' / ')[1] : null;
 
                   return (
                     <section
@@ -322,11 +357,11 @@ export default function BestellenPage() {
                       {/* Category Header */}
                       <div className="mb-6 pb-3 border-b-2 border-gray-900">
                         <h2 className="text-2xl md:text-3xl font-light tracking-wide text-gray-900">
-                          {category.name_de.split(' / ')[0]}
+                          {displayName}
                         </h2>
-                        {category.name_de.includes(' / ') && (
+                        {subName && (
                           <p className="text-sm text-gray-600 mt-1">
-                            {category.name_de.split(' / ')[1]}
+                            {subName}
                           </p>
                         )}
                       </div>
@@ -347,7 +382,7 @@ export default function BestellenPage() {
                                 {dish.image_url ? (
                                   <img
                                     src={dish.image_url}
-                                    alt={dish.name_de}
+                                    alt={isGerman ? dish.name_de : dish.name_tr}
                                     className="w-full h-full object-cover"
                                   />
                                 ) : (
@@ -368,11 +403,8 @@ export default function BestellenPage() {
                                   <div className="flex items-start justify-between gap-2 mb-2">
                                     <div className="flex-1 min-w-0">
                                       <h3 className="font-medium text-gray-900 group-hover:text-gray-600 transition-colors">
-                                        {dish.name_de}
+                                        {isGerman ? dish.name_de : dish.name_tr}
                                       </h3>
-                                      {dish.name_tr && dish.name_tr !== dish.name_de && (
-                                        <p className="text-xs text-gray-500 mt-0.5">{dish.name_tr}</p>
-                                      )}
                                     </div>
                                     <span className="text-lg font-semibold text-gray-900 whitespace-nowrap ml-2">
                                       €{dish.price.toFixed(2)}
@@ -399,9 +431,9 @@ export default function BestellenPage() {
                                   </div>
 
                                   {/* Description */}
-                                  {dish.description_de && (
+                                  {(isGerman ? dish.description_de : dish.description_tr) && (
                                     <p className="text-sm text-gray-600 line-clamp-2">
-                                      {dish.description_de}
+                                      {isGerman ? dish.description_de : dish.description_tr}
                                     </p>
                                   )}
                                 </button>
@@ -412,7 +444,7 @@ export default function BestellenPage() {
                                 <button
                                   onClick={() => addToCart(dish)}
                                   className="w-10 h-10 md:w-12 md:h-12 bg-gray-900 hover:bg-gray-700 text-white flex items-center justify-center transition-colors group"
-                                  title="In den Warenkorb"
+                                  title={isGerman ? 'In den Warenkorb' : 'Sepete ekle'}
                                 >
                                   <svg className="w-5 h-5 md:w-6 md:h-6 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -436,7 +468,7 @@ export default function BestellenPage() {
               <div className="bg-white border-2 border-gray-900 shadow-lg">
                 <div className="p-4 bg-gray-900 text-white">
                   <h2 className="text-lg font-medium tracking-wide flex items-center justify-between">
-                    <span>Warenkorb</span>
+                    <span>{isGerman ? 'Warenkorb' : 'Sepet'}</span>
                     {cart.length > 0 && (
                       <span className="text-sm bg-white text-gray-900 px-2 py-0.5 rounded-full">
                         {getTotalItems()}
@@ -451,7 +483,9 @@ export default function BestellenPage() {
                       <svg className="w-16 h-16 mx-auto text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
                       </svg>
-                      <p className="text-gray-500 text-sm">Ihr Warenkorb ist leer</p>
+                      <p className="text-gray-500 text-sm">
+                        {isGerman ? 'Ihr Warenkorb ist leer' : 'Sepetiniz boş'}
+                      </p>
                     </div>
                   ) : (
                     <>
@@ -460,7 +494,7 @@ export default function BestellenPage() {
                           <div key={item.dish.id} className="flex gap-2 p-2 border border-gray-200 rounded">
                             <div className="flex-1 min-w-0">
                               <h3 className="font-medium text-sm text-gray-900 line-clamp-1 mb-1">
-                                {item.dish.name_de}
+                                {isGerman ? item.dish.name_de : item.dish.name_tr}
                               </h3>
                               <p className="text-xs text-gray-600 mb-2">€{item.dish.price.toFixed(2)}</p>
                               <div className="flex items-center gap-2">
@@ -496,10 +530,14 @@ export default function BestellenPage() {
 
                       <div className="border-t-2 border-gray-900 pt-3 mb-4">
                         <div className="flex justify-between items-center">
-                          <span className="text-lg font-semibold">Gesamt:</span>
+                          <span className="text-lg font-semibold">
+                            {isGerman ? 'Gesamt:' : 'Toplam:'}
+                          </span>
                           <span className="text-xl font-bold">€{getTotalPrice().toFixed(2)}</span>
                         </div>
-                        <p className="text-xs text-gray-500 mt-1">{getTotalItems()} Artikel</p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          {getTotalItems()} {isGerman ? 'Artikel' : 'Ürün'}
+                        </p>
                       </div>
 
                       <button
@@ -509,7 +547,7 @@ export default function BestellenPage() {
                         <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                           <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
                         </svg>
-                        Bestellen
+                        {isGerman ? 'Bestellen' : 'Sipariş Ver'}
                       </button>
                     </>
                   )}
@@ -530,7 +568,7 @@ export default function BestellenPage() {
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
             </svg>
-            <span>Warenkorb ({getTotalItems()})</span>
+            <span>{isGerman ? 'Warenkorb' : 'Sepet'} ({getTotalItems()})</span>
             <span className="font-bold">€{getTotalPrice().toFixed(2)}</span>
           </button>
         </div>
@@ -552,7 +590,9 @@ export default function BestellenPage() {
           <div className="bg-white max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="sticky top-0 bg-white border-b border-gray-200 p-6">
               <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-light tracking-wide">Bestellung abschließen</h2>
+                <h2 className="text-2xl font-light tracking-wide">
+                  {isGerman ? 'Bestellung abschließen' : 'Siparişi Tamamla'}
+                </h2>
                 <button
                   onClick={() => setShowCheckout(false)}
                   className="text-gray-500 hover:text-gray-900"
@@ -566,21 +606,27 @@ export default function BestellenPage() {
 
             <div className="p-6">
               <div className="mb-6">
-                <h3 className="font-medium text-gray-900 mb-4">Ihre Kontaktdaten</h3>
+                <h3 className="font-medium text-gray-900 mb-4">
+                  {isGerman ? 'Ihre Kontaktdaten' : 'İletişim Bilgileriniz'}
+                </h3>
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm text-gray-700 mb-2">Name *</label>
+                    <label className="block text-sm text-gray-700 mb-2">
+                      {isGerman ? 'Name *' : 'İsim *'}
+                    </label>
                     <input
                       type="text"
                       value={customerName}
                       onChange={(e) => setCustomerName(e.target.value)}
-                      placeholder="Ihr Name"
+                      placeholder={isGerman ? 'Ihr Name' : 'Adınız'}
                       className="w-full border border-gray-300 px-4 py-3 focus:outline-none focus:border-gray-900"
                       required
                     />
                   </div>
                   <div>
-                    <label className="block text-sm text-gray-700 mb-2">Telefonnummer *</label>
+                    <label className="block text-sm text-gray-700 mb-2">
+                      {isGerman ? 'Telefonnummer *' : 'Telefon Numarası *'}
+                    </label>
                     <input
                       type="tel"
                       value={customerPhone}
@@ -591,22 +637,26 @@ export default function BestellenPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm text-gray-700 mb-2">Lieferadresse *</label>
+                    <label className="block text-sm text-gray-700 mb-2">
+                      {isGerman ? 'Lieferadresse *' : 'Teslimat Adresi *'}
+                    </label>
                     <textarea
                       value={customerAddress}
                       onChange={(e) => setCustomerAddress(e.target.value)}
-                      placeholder="Straße, Hausnummer, PLZ, Stadt"
+                      placeholder={isGerman ? 'Straße, Hausnummer, PLZ, Stadt' : 'Sokak, Kapı No, Posta Kodu, Şehir'}
                       rows={3}
                       className="w-full border border-gray-300 px-4 py-3 focus:outline-none focus:border-gray-900"
                       required
                     />
                   </div>
                   <div>
-                    <label className="block text-sm text-gray-700 mb-2">Hinweise (optional)</label>
+                    <label className="block text-sm text-gray-700 mb-2">
+                      {isGerman ? 'Hinweise (optional)' : 'Notlar (opsiyonel)'}
+                    </label>
                     <textarea
                       value={deliveryNote}
                       onChange={(e) => setDeliveryNote(e.target.value)}
-                      placeholder="z.B. Klingel, Stockwerk, besondere Wünsche..."
+                      placeholder={isGerman ? 'z.B. Klingel, Stockwerk, besondere Wünsche...' : 'Örn. Kapı zili, kat, özel istekler...'}
                       rows={2}
                       className="w-full border border-gray-300 px-4 py-3 focus:outline-none focus:border-gray-900"
                     />
@@ -615,17 +665,19 @@ export default function BestellenPage() {
               </div>
 
               <div className="border-t border-gray-200 pt-4 mb-6">
-                <h3 className="font-medium text-gray-900 mb-3">Bestellübersicht</h3>
+                <h3 className="font-medium text-gray-900 mb-3">
+                  {isGerman ? 'Bestellübersicht' : 'Sipariş Özeti'}
+                </h3>
                 <div className="space-y-2 mb-4">
                   {cart.map((item) => (
                     <div key={item.dish.id} className="flex justify-between text-sm">
-                      <span>{item.quantity}x {item.dish.name_de}</span>
+                      <span>{item.quantity}x {isGerman ? item.dish.name_de : item.dish.name_tr}</span>
                       <span>€{(item.dish.price * item.quantity).toFixed(2)}</span>
                     </div>
                   ))}
                 </div>
                 <div className="flex justify-between items-center text-xl font-semibold border-t border-gray-200 pt-3">
-                  <span>Gesamt:</span>
+                  <span>{isGerman ? 'Gesamt:' : 'Toplam:'}</span>
                   <span>€{getTotalPrice().toFixed(2)}</span>
                 </div>
               </div>
@@ -637,10 +689,12 @@ export default function BestellenPage() {
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
                 </svg>
-                Bestellung via WhatsApp senden
+                {isGerman ? 'Bestellung via WhatsApp senden' : 'WhatsApp ile sipariş gönder'}
               </button>
               <p className="text-xs text-gray-500 text-center mt-3">
-                Sie werden zu WhatsApp weitergeleitet, um Ihre Bestellung zu bestätigen
+                {isGerman 
+                  ? 'Sie werden zu WhatsApp weitergeleitet, um Ihre Bestellung zu bestätigen'
+                  : 'Siparişinizi onaylamak için WhatsApp\'a yönlendirileceksiniz'}
               </p>
             </div>
           </div>

@@ -2,6 +2,7 @@
 "use client";
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 
@@ -12,6 +13,7 @@ export default function Navbar() {
   
   // Mevcut dili pathname'den tespit et
   const currentLocale = pathname?.startsWith('/de') ? 'de' : pathname?.startsWith('/tr') ? 'tr' : 'de';
+  const isGerman = currentLocale === 'de';
 
   // Admin, login, menu sayfalarında Navbar'ı gizle
   if (pathname?.startsWith('/admin') || pathname?.startsWith('/login') || pathname?.startsWith('/menu')) {
@@ -37,10 +39,20 @@ export default function Navbar() {
       <header className={`fixed top-0 left-0 right-0 z-50 ${isHomePage ? 'bg-transparent' : 'bg-white/95'} backdrop-blur-sm border-b ${isHomePage ? 'border-white/20' : 'border-gray-100'}`}>
         <nav className="container mx-auto px-6 lg:px-12 h-20 flex justify-between items-center">
           
-          {/* Logo */}
-          <div className={`text-xl lg:text-2xl font-light tracking-wider ${isHomePage ? 'text-white' : 'text-gray-900'}`}>
-            <Link href={`/${currentLocale}`} className={`${isHomePage ? 'hover:text-gray-200' : 'hover:text-gray-600'} transition-colors`}>
-              KAPADOKYA
+          {/* Logo + Wordmark */}
+          <div className="flex items-center gap-3">
+            <Link href={`/${currentLocale}`} className="flex items-center gap-3 group" aria-label="Kapadokya Startseite">
+              <div className={`relative w-14 h-14 lg:w-16 lg:h-16 overflow-hidden rounded-full ring-1 ${isHomePage ? 'ring-white/40' : 'ring-gray-200'} bg-white`}>
+                <Image
+                  src="/Logo.jpeg"
+                  alt="Kapadokya Logo"
+                  fill
+                  sizes="64px"
+                  className="object-cover group-hover:scale-105 transition-transform duration-300"
+                  priority
+                />
+              </div>
+              <span className={`text-xl lg:text-2xl font-light tracking-wider ${isHomePage ? 'text-white group-hover:text-gray-200' : 'text-gray-900 group-hover:text-gray-600'} transition-colors`}>KAPADOKYA</span>
             </Link>
           </div>
 
@@ -52,8 +64,8 @@ export default function Navbar() {
               </Link>
             </li>
             <li>
-              <Link href="/speisekarte" className={`${isHomePage ? 'text-white hover:text-gray-200' : 'text-gray-700 hover:text-gray-900'} transition-colors`}>
-                Speisekarte
+              <Link href={`/${currentLocale}/speisekarte`} className={`${isHomePage ? 'text-white hover:text-gray-200' : 'text-gray-700 hover:text-gray-900'} transition-colors`}>
+                {isGerman ? 'Speisekarte' : 'Menü'}
               </Link>
             </li>
             <li>
@@ -139,11 +151,11 @@ export default function Navbar() {
                 Home
               </Link>
               <Link 
-                href="/speisekarte" 
+                href={`/${currentLocale}/speisekarte`} 
                 onClick={closeMobileMenu}
                 className="block py-3 text-gray-900 hover:text-gray-600 text-lg border-b border-gray-100"
               >
-                Speisekarte
+                {isGerman ? 'Speisekarte' : 'Menü'}
               </Link>
               <Link 
                 href={`/${currentLocale}/bestellen`} 

@@ -1,7 +1,15 @@
 /** @type {import('next').NextConfig} */
 const config = {
   reactStrictMode: true,
-  // Gelecekte buraya başka ayarlar eklenebilir
+  async redirects() {
+    return [
+      {
+        source: '/speisekarte',
+        destination: '/de/speisekarte',
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default config;

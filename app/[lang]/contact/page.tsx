@@ -2,10 +2,15 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { supabase } from '../../../lib/supabaseClient';
 
 export default function ContactPage() {
+  const pathname = usePathname();
+  const currentLocale = pathname?.startsWith('/de') ? 'de' : pathname?.startsWith('/tr') ? 'tr' : 'de';
+  const isGerman = currentLocale === 'de';
+
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
@@ -38,18 +43,28 @@ export default function ContactPage() {
     e.preventDefault();
     
     if (!whatsappNumber) {
-      toast.error('WhatsApp-Nummer ist nicht konfiguriert');
+      toast.error(isGerman 
+        ? 'WhatsApp-Nummer ist nicht konfiguriert' 
+        : 'WhatsApp numarası yapılandırılmamış');
       return;
     }
 
     // WhatsApp mesajını oluştur
-    const message = `🍽️ *NEUE RESERVIERUNG*
+    const message = isGerman 
+      ? `🍽️ *NEUE RESERVIERUNG*
 
 👤 *Name:* ${formData.name}
 📱 *Telefon:* ${formData.phone}
 📅 *Datum:* ${formData.date}
 🕐 *Uhrzeit:* ${formData.time}
-👥 *Personen:* ${formData.guests}${formData.message ? `\n\n💬 *Hinweise:*\n${formData.message}` : ''}`;
+👥 *Personen:* ${formData.guests}${formData.message ? `\n\n💬 *Hinweise:*\n${formData.message}` : ''}`
+      : `🍽️ *YENİ REZERVASYON*
+
+👤 *İsim:* ${formData.name}
+📱 *Telefon:* ${formData.phone}
+📅 *Tarih:* ${formData.date}
+🕐 *Saat:* ${formData.time}
+👥 *Kişi Sayısı:* ${formData.guests}${formData.message ? `\n\n💬 *Notlar:*\n${formData.message}` : ''}`;
 
     const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
     
@@ -66,7 +81,9 @@ export default function ContactPage() {
       message: ''
     });
     
-    toast.success('Sie werden zu WhatsApp weitergeleitet!');
+    toast.success(isGerman 
+      ? 'Sie werden zu WhatsApp weitergeleitet!' 
+      : 'WhatsApp\'a yönlendiriliyorsunuz!');
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -83,10 +100,12 @@ export default function ContactPage() {
       <section className="bg-white py-20 border-b border-gray-100">
         <div className="container mx-auto px-6 lg:px-12 text-center">
           <h1 className="text-5xl md:text-6xl font-light tracking-wider text-gray-900 mb-6">
-            KONTAKT & RESERVIERUNG
+            {isGerman ? 'KONTAKT & RESERVIERUNG' : 'İLETİŞİM & REZERVASYON'}
           </h1>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Reservieren Sie Ihren Tisch oder kontaktieren Sie uns für weitere Informationen
+            {isGerman 
+              ? 'Reservieren Sie Ihren Tisch oder kontaktieren Sie uns für weitere Informationen'
+              : 'Masanızı rezerve edin veya daha fazla bilgi için bizimle iletişime geçin'}
           </p>
         </div>
       </section>
@@ -100,12 +119,14 @@ export default function ContactPage() {
             {/* Contact Information */}
             <div className="bg-white p-8 border border-gray-200 mb-8">
               <h2 className="text-2xl font-light tracking-wide text-gray-900 mb-6">
-                KONTAKTINFORMATIONEN
+                {isGerman ? 'KONTAKTINFORMATIONEN' : 'İLETİŞİM BİLGİLERİ'}
               </h2>
               
               <div className="space-y-6">
                 <div>
-                  <h3 className="text-sm uppercase tracking-wide text-gray-500 mb-2">Adresse</h3>
+                  <h3 className="text-sm uppercase tracking-wide text-gray-500 mb-2">
+                    {isGerman ? 'Adresse' : 'Adres'}
+                  </h3>
                   <p className="text-gray-900">
                     Elberfelder Str. 51<br />
                     58095 Hagen, Deutschland
@@ -113,7 +134,9 @@ export default function ContactPage() {
                 </div>
 
                 <div>
-                  <h3 className="text-sm uppercase tracking-wide text-gray-500 mb-2">Telefon</h3>
+                  <h3 className="text-sm uppercase tracking-wide text-gray-500 mb-2">
+                    {isGerman ? 'Telefon' : 'Telefon'}
+                  </h3>
                   <a href="tel:023314899898" className="text-gray-900 hover:text-gray-600 transition-colors">
                     02331 4899898
                   </a>
@@ -127,11 +150,13 @@ export default function ContactPage() {
                 </div>
 
                 <div>
-                  <h3 className="text-sm uppercase tracking-wide text-gray-500 mb-2">Öffnungszeiten</h3>
+                  <h3 className="text-sm uppercase tracking-wide text-gray-500 mb-2">
+                    {isGerman ? 'Öffnungszeiten' : 'Açılış Saatleri'}
+                  </h3>
                   <div className="space-y-1 text-gray-900">
-                    <p>Montag - Donnerstag: 11:00 - 22:00</p>
-                    <p>Freitag - Samstag: 11:00 - 23:00</p>
-                    <p>Sonntag: 12:00 - 22:00</p>
+                    <p>{isGerman ? 'Montag - Donnerstag' : 'Pazartesi - Perşembe'}: 11:00 - 22:00</p>
+                    <p>{isGerman ? 'Freitag - Samstag' : 'Cuma - Cumartesi'}: 11:00 - 23:00</p>
+                    <p>{isGerman ? 'Sonntag' : 'Pazar'}: 12:00 - 22:00</p>
                   </div>
                 </div>
               </div>
@@ -139,8 +164,9 @@ export default function ContactPage() {
 
             {/* Map */}
             <div className="bg-gray-200 h-80 border border-gray-200 flex items-center justify-center">
-              <p className="text-gray-500">Google Maps wird hier eingebettet</p>
-              {/* Google Maps iframe buraya gelecek */}
+              <p className="text-gray-500">
+                {isGerman ? 'Google Maps wird hier eingebettet' : 'Google Maps buraya yerleştirilecek'}
+              </p>
             </div>
 
           </div>
@@ -149,14 +175,14 @@ export default function ContactPage() {
           <div>
             <div className="bg-white p-8 border border-gray-200">
               <h2 className="text-2xl font-light tracking-wide text-gray-900 mb-6">
-                TISCH RESERVIEREN
+                {isGerman ? 'TISCH RESERVIEREN' : 'MASA REZERVASYONU'}
               </h2>
 
               <form onSubmit={handleSubmit} className="space-y-6">
                 
                 <div>
                   <label htmlFor="name" className="block text-sm uppercase tracking-wide text-gray-700 mb-2">
-                    Name *
+                    {isGerman ? 'Name *' : 'İsim *'}
                   </label>
                   <input
                     type="text"
@@ -171,7 +197,7 @@ export default function ContactPage() {
 
                 <div>
                   <label htmlFor="phone" className="block text-sm uppercase tracking-wide text-gray-700 mb-2">
-                    Telefon *
+                    {isGerman ? 'Telefon *' : 'Telefon *'}
                   </label>
                   <input
                     type="tel"
@@ -187,7 +213,7 @@ export default function ContactPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label htmlFor="date" className="block text-sm uppercase tracking-wide text-gray-700 mb-2">
-                      Datum *
+                      {isGerman ? 'Datum *' : 'Tarih *'}
                     </label>
                     <input
                       type="date"
@@ -202,7 +228,7 @@ export default function ContactPage() {
 
                   <div>
                     <label htmlFor="time" className="block text-sm uppercase tracking-wide text-gray-700 mb-2">
-                      Uhrzeit *
+                      {isGerman ? 'Uhrzeit *' : 'Saat *'}
                     </label>
                     <input
                       type="time"
@@ -218,7 +244,7 @@ export default function ContactPage() {
 
                 <div>
                   <label htmlFor="guests" className="block text-sm uppercase tracking-wide text-gray-700 mb-2">
-                    Anzahl Gäste *
+                    {isGerman ? 'Anzahl Gäste *' : 'Kişi Sayısı *'}
                   </label>
                   <select
                     id="guests"
@@ -229,14 +255,16 @@ export default function ContactPage() {
                     className="w-full px-4 py-3 border border-gray-300 focus:border-gray-900 focus:outline-none transition-colors"
                   >
                     {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(num => (
-                      <option key={num} value={num}>{num} {num === 1 ? 'Person' : 'Personen'}</option>
+                      <option key={num} value={num}>
+                        {num} {isGerman ? (num === 1 ? 'Person' : 'Personen') : 'Kişi'}
+                      </option>
                     ))}
                   </select>
                 </div>
 
                 <div>
                   <label htmlFor="message" className="block text-sm uppercase tracking-wide text-gray-700 mb-2">
-                    Nachricht (optional)
+                    {isGerman ? 'Nachricht (optional)' : 'Mesaj (opsiyonel)'}
                   </label>
                   <textarea
                     id="message"
@@ -245,7 +273,7 @@ export default function ContactPage() {
                     value={formData.message}
                     onChange={handleChange}
                     className="w-full px-4 py-3 border border-gray-300 focus:border-gray-900 focus:outline-none transition-colors resize-none"
-                    placeholder="Besondere Wünsche, Allergien etc."
+                    placeholder={isGerman ? 'Besondere Wünsche, Allergien etc.' : 'Özel istekler, alerjiler vb.'}
                   />
                 </div>
 
@@ -257,11 +285,11 @@ export default function ContactPage() {
                   <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
                   </svg>
-                  Via WhatsApp reservieren
+                  {isGerman ? 'Via WhatsApp reservieren' : 'WhatsApp ile rezervasyon yap'}
                 </button>
 
                 <p className="text-sm text-gray-500 text-center">
-                  * Pflichtfelder
+                  {isGerman ? '* Pflichtfelder' : '* Zorunlu alanlar'}
                 </p>
 
               </form>
