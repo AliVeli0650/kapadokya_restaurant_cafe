@@ -60,7 +60,7 @@ export default function Navbar() {
           <ul className="hidden md:flex space-x-8 text-sm uppercase tracking-wide">
             <li>
               <Link href={`/${currentLocale}`} className={`${isHomePage ? 'text-white hover:text-gray-200' : 'text-gray-700 hover:text-gray-900'} transition-colors`}>
-                Home
+                {isGerman ? 'Home' : 'Anasayfa'}
               </Link>
             </li>
             <li>
@@ -70,17 +70,17 @@ export default function Navbar() {
             </li>
             <li>
               <Link href={`/${currentLocale}/bestellen`} className={`${isHomePage ? 'text-white hover:text-gray-200' : 'text-gray-700 hover:text-gray-900'} transition-colors`}>
-                Bestellen
+                {isGerman ? 'Bestellen' : 'Sipariş'}
               </Link>
             </li>
             <li>
               <Link href={`/${currentLocale}/about`} className={`${isHomePage ? 'text-white hover:text-gray-200' : 'text-gray-700 hover:text-gray-900'} transition-colors`}>
-                Über uns
+                {isGerman ? 'Über uns' : 'Hakkımızda'}
               </Link>
             </li>
             <li>
               <Link href={`/${currentLocale}/contact`} className={`${isHomePage ? 'text-white hover:text-gray-200' : 'text-gray-700 hover:text-gray-900'} transition-colors`}>
-                Kontakt
+                {isGerman ? 'Kontakt' : 'İletişim'}
               </Link>
             </li>
           </ul>
@@ -109,7 +109,7 @@ export default function Navbar() {
               href={`/${currentLocale}/contact#reservation`}
               className={`hidden md:block border ${isHomePage ? 'border-white text-white hover:bg-white hover:text-gray-900' : 'border-gray-900 text-gray-900 hover:bg-gray-900 hover:text-white'} px-6 py-2 text-sm uppercase tracking-wide transition-all duration-300`}
             >
-              Reservieren
+              {isGerman ? 'Reservieren' : 'Rezervasyon'}
             </Link>
 
             {/* Hamburger Menu Button - Mobile */}
@@ -148,7 +148,7 @@ export default function Navbar() {
                 onClick={closeMobileMenu}
                 className="block py-3 text-gray-900 hover:text-gray-600 text-lg border-b border-gray-100"
               >
-                Home
+                {isGerman ? 'Home' : 'Anasayfa'}
               </Link>
               <Link 
                 href={`/${currentLocale}/speisekarte`} 
@@ -162,28 +162,28 @@ export default function Navbar() {
                 onClick={closeMobileMenu}
                 className="block py-3 text-gray-900 hover:text-gray-600 text-lg border-b border-gray-100"
               >
-                Bestellen
+                {isGerman ? 'Bestellen' : 'Sipariş'}
               </Link>
               <Link 
                 href={`/${currentLocale}/about`} 
                 onClick={closeMobileMenu}
                 className="block py-3 text-gray-900 hover:text-gray-600 text-lg border-b border-gray-100"
               >
-                Über uns
+                {isGerman ? 'Über uns' : 'Hakkımızda'}
               </Link>
               <Link 
                 href={`/${currentLocale}/contact`} 
                 onClick={closeMobileMenu}
                 className="block py-3 text-gray-900 hover:text-gray-600 text-lg border-b border-gray-100"
               >
-                Kontakt
+                {isGerman ? 'Kontakt' : 'İletişim'}
               </Link>
               <Link 
                 href={`/${currentLocale}/contact#reservation`}
                 onClick={closeMobileMenu}
                 className="block mt-4 w-full text-center border-2 border-gray-900 text-gray-900 px-6 py-3 text-sm uppercase tracking-wide hover:bg-gray-900 hover:text-white transition-all duration-300"
               >
-                Reservieren
+                {isGerman ? 'Reservieren' : 'Rezervasyon'}
               </Link>
             </nav>
           </div>
