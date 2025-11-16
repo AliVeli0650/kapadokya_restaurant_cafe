@@ -201,6 +201,17 @@ export default function BestellenPage() {
     return cart.reduce((sum, item) => sum + item.quantity, 0);
   };
 
+  // Delivery fee: €3 for totals up to and including €30, free above €30
+  const getDeliveryFee = () => {
+    const subtotal = getTotalPrice();
+    if (subtotal > 0 && subtotal <= 30) return 3;
+    return 0;
+  };
+
+  const getFinalTotal = () => {
+    return getTotalPrice() + getDeliveryFee();
+  };
+
   const sendWhatsAppOrder = () => {
     if (!customerName || !customerPhone || !customerAddress) {
       toast.error(isGerman 
@@ -236,9 +247,18 @@ export default function BestellenPage() {
       message += `${index + 1}. ${item.quantity}x ${dishName} - €${(item.dish.price * item.quantity).toFixed(2)}\n`;
     });
     
+    const fee = getDeliveryFee();
+    const finalTotal = getFinalTotal();
+
     message += isGerman 
-      ? `\n*GESAMT: €${getTotalPrice().toFixed(2)}*\n\n_Bitte bestätigen Sie die Bestellung und teilen Sie die geschätzte Lieferzeit mit._`
-      : `\n*TOPLAM: €${getTotalPrice().toFixed(2)}*\n\n_Lütfen siparişi onaylayın ve tahmini teslimat süresini bildirin._`;
+      ? `\n*ZWISCHENSUMME:* €${getTotalPrice().toFixed(2)}\n` 
+      : `\n*ARA TOPLAM:* €${getTotalPrice().toFixed(2)}\n`;
+    message += isGerman
+      ? `*LIEFERUNG:* ${fee === 0 ? 'Kostenlos' : `€${fee.toFixed(2)}`}\n`
+      : `*TESLIMAT:* ${fee === 0 ? 'Ücretsiz' : `€${fee.toFixed(2)}`}\n`;
+    message += isGerman 
+      ? `*GESAMT:* €${finalTotal.toFixed(2)}\n\n_Bitte bestätigen Sie die Bestellung und teilen Sie die geschätzte Lieferzeit mit._`
+      : `*TOPLAM:* €${finalTotal.toFixed(2)}\n\n_Lütfen siparişi onaylayın ve tahmini teslimat süresini bildirin._`;
 
     if (!whatsappNumber) {
       toast.error(isGerman 
@@ -287,6 +307,14 @@ export default function BestellenPage() {
 
       {/* Main Content - Two Column Layout */}
       <div className="max-w-7xl mx-auto px-6 py-8">
+        {/* Delivery fee notice */}
+        <div className="mb-6">
+          <div className="bg-amber-50 border border-amber-200 text-amber-900 text-sm px-4 py-3">
+            {isGerman
+              ? 'Lieferkosten: Bis einschließlich 30 € fällt eine Liefergebühr von 3 € an. Ab 30 € ist die Lieferung kostenlos.'
+              : 'Teslimat ücreti: 30 € dâhil olmak üzere 30 €’ya kadar 3 € teslimat ücreti uygulanır. 30 € üzeri teslimat ücretsizdir.'}
+          </div>
+        </div>
         <div className="flex gap-8">
           {/* Left Sidebar - Category Navigation (Desktop Only) */}
           <aside className="hidden lg:block w-64 flex-shrink-0">
@@ -528,12 +556,22 @@ export default function BestellenPage() {
                         ))}
                       </div>
 
-                      <div className="border-t-2 border-gray-900 pt-3 mb-4">
-                        <div className="flex justify-between items-center">
-                          <span className="text-lg font-semibold">
-                            {isGerman ? 'Gesamt:' : 'Toplam:'}
+                      <div className="border-t-2 border-gray-900 pt-3 mb-4 space-y-1">
+                        <div className="flex justify-between items-center text-sm">
+                          <span className="font-medium">{isGerman ? 'Zwischensumme:' : 'Ara Toplam:'}</span>
+                          <span>€{getTotalPrice().toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between items-center text-sm">
+                          <span className="font-medium">{isGerman ? 'Lieferung:' : 'Teslimat:'}</span>
+                          <span>
+                            {getDeliveryFee() === 0 
+                              ? (isGerman ? 'Kostenlos' : 'Ücretsiz') 
+                              : `€${getDeliveryFee().toFixed(2)}`}
                           </span>
-                          <span className="text-xl font-bold">€{getTotalPrice().toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between items-center pt-2">
+                          <span className="text-lg font-semibold">{isGerman ? 'Gesamt:' : 'Toplam:'}</span>
+                          <span className="text-xl font-bold">€{getFinalTotal().toFixed(2)}</span>
                         </div>
                         <p className="text-xs text-gray-500 mt-1">
                           {getTotalItems()} {isGerman ? 'Artikel' : 'Ürün'}
@@ -569,7 +607,7 @@ export default function BestellenPage() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
             </svg>
             <span>{isGerman ? 'Warenkorb' : 'Sepet'} ({getTotalItems()})</span>
-            <span className="font-bold">€{getTotalPrice().toFixed(2)}</span>
+            <span className="font-bold">€{getFinalTotal().toFixed(2)}</span>
           </button>
         </div>
       )}
@@ -676,9 +714,19 @@ export default function BestellenPage() {
                     </div>
                   ))}
                 </div>
-                <div className="flex justify-between items-center text-xl font-semibold border-t border-gray-200 pt-3">
-                  <span>{isGerman ? 'Gesamt:' : 'Toplam:'}</span>
-                  <span>€{getTotalPrice().toFixed(2)}</span>
+                <div className="space-y-1 border-t border-gray-200 pt-3">
+                  <div className="flex justify-between text-sm">
+                    <span className="font-medium">{isGerman ? 'Zwischensumme:' : 'Ara Toplam:'}</span>
+                    <span>€{getTotalPrice().toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="font-medium">{isGerman ? 'Lieferung:' : 'Teslimat:'}</span>
+                    <span>{getDeliveryFee() === 0 ? (isGerman ? 'Kostenlos' : 'Ücretsiz') : `€${getDeliveryFee().toFixed(2)}`}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-xl font-semibold pt-2">
+                    <span>{isGerman ? 'Gesamt:' : 'Toplam:'}</span>
+                    <span>€{getFinalTotal().toFixed(2)}</span>
+                  </div>
                 </div>
               </div>
 
