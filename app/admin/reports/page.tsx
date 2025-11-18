@@ -25,6 +25,7 @@ interface FetchedIncomeTransaction {
 interface ExpenseData {
   amount: number;
   expense_date: string;
+  payment_method: string | null;
   expense_categories: { name: string; parent_id: string | null } | null;
 }
 
@@ -33,6 +34,16 @@ interface CategoryBreakdown {
   value: number;
   percentage: number;
   [key: string]: any; // Add index signature for Recharts compatibility
+}
+
+// Detailed per-category breakdown by payment method
+interface DetailedExpenseBreakdown {
+  name: string;
+  total: number;
+  percentage: number;
+  nakit: number;
+  krediKarti: number;
+  bankaTransferi: number;
 }
 
 interface TrendPoint {
@@ -62,7 +73,8 @@ export default function ReportsPage() {
 
   // Chart data
   const [incomeSourceData, setIncomeSourceData] = useState<CategoryBreakdown[]>([]);
-  const [expenseCategoryData, setExpenseCategoryData] = useState<CategoryBreakdown[]>([]);
+  const [expenseCategoryData, setExpenseCategoryData] = useState<DetailedExpenseBreakdown[]>([]);
+  const [paymentMethodData, setPaymentMethodData] = useState<CategoryBreakdown[]>([]);
   const [trendData, setTrendData] = useState<TrendPoint[]>([]);
   const [topExpenses, setTopExpenses] = useState<TopExpense[]>([]);
   const [avgDailyIncome, setAvgDailyIncome] = useState(0);
@@ -99,6 +111,7 @@ export default function ReportsPage() {
         .select(`
           amount,
           expense_date,
+          payment_method,
           expense_categories (
             name,
             parent_id
@@ -145,23 +158,54 @@ export default function ReportsPage() {
         }))
         .filter(d => d.value > 0));
 
-      // Expense category breakdown
-      const categoryMap = new Map<string, number>();
+      // Expense category breakdown per payment method
+      const categoryPaymentMap = new Map<string, { total: number; nakit: number; krediKarti: number; bankaTransferi: number }>();
+      const paymentMethodMap = new Map<string, number>();
       expData.forEach(exp => {
         const catName = exp.expense_categories?.name || 'Diğer';
-        categoryMap.set(catName, (categoryMap.get(catName) || 0) + Number(exp.amount));
+        const amount = Number(exp.amount) || 0;
+        const pm = exp.payment_method as string | null;
+
+        if (!categoryPaymentMap.has(catName)) {
+          categoryPaymentMap.set(catName, { total: 0, nakit: 0, krediKarti: 0, bankaTransferi: 0 });
+        }
+        const current = categoryPaymentMap.get(catName)!;
+        current.total += amount;
+
+        if (pm === 'Nakit') current.nakit += amount;
+        else if (pm === 'Kredi Kartı') current.krediKarti += amount;
+        else if (pm === 'Banka Transferi') current.bankaTransferi += amount;
+
+        // Global payment method totals (for summary table)
+        if (pm === 'Nakit' || pm === 'Kredi Kartı' || pm === 'Banka Transferi') {
+          paymentMethodMap.set(pm, (paymentMethodMap.get(pm) || 0) + amount);
+        }
       });
 
-      const expCatData = Array.from(categoryMap.entries())
+      const detailedData: DetailedExpenseBreakdown[] = Array.from(categoryPaymentMap.entries())
+        .map(([name, v]) => ({
+          name,
+          total: v.total,
+          percentage: totalExp > 0 ? (v.total / totalExp) * 100 : 0,
+          nakit: v.nakit,
+          krediKarti: v.krediKarti,
+          bankaTransferi: v.bankaTransferi,
+        }))
+        .sort((a, b) => b.total - a.total);
+
+      setExpenseCategoryData(detailedData);
+      setTopExpenses(detailedData.slice(0, 5).map(d => ({ category: d.name, amount: d.total })));
+
+      // Payment method breakdown (summary)
+      const payMethodData = Array.from(paymentMethodMap.entries())
         .map(([name, value]) => ({
           name,
           value,
-          percentage: (value / totalExp) * 100,
+          percentage: totalExp > 0 ? (value / totalExp) * 100 : 0,
         }))
         .sort((a, b) => b.value - a.value);
 
-      setExpenseCategoryData(expCatData);
-      setTopExpenses(expCatData.slice(0, 5).map(d => ({ category: d.name, amount: d.value })));
+      setPaymentMethodData(payMethodData);
 
       // Daily trend
       const dailyMap = new Map<string, { gelir: number; gider: number }>();
@@ -240,6 +284,22 @@ export default function ReportsPage() {
   ];
 
   const profit = income - expense;
+  // Totals by payment method for the detailed table footer
+  const totalsByMethod = expenseCategoryData.reduce(
+    (acc, item) => {
+      acc.nakit += item.nakit || 0;
+      acc.krediKarti += item.krediKarti || 0;
+      acc.bankaTransferi += item.bankaTransferi || 0;
+      return acc;
+    },
+    { nakit: 0, krediKarti: 0, bankaTransferi: 0 }
+  );
+  // Adapt detailed data to pie chart input shape
+  const expenseCategoryChartData: CategoryBreakdown[] = expenseCategoryData.map((d) => ({
+    name: d.name,
+    value: d.total,
+    percentage: d.percentage,
+  }));
   const incomeChange = prevIncome > 0 ? ((income - prevIncome) / prevIncome) * 100 : 0;
   const expenseChange = prevExpense > 0 ? ((expense - prevExpense) / prevExpense) * 100 : 0;
 
@@ -357,11 +417,11 @@ export default function ReportsPage() {
         {/* Expense Categories Pie Chart */}
         <div className="bg-white border border-gray-200 p-6">
           <h3 className="text-lg font-light tracking-wide mb-4">Gider Kategorileri Dağılımı</h3>
-          {expenseCategoryData.length > 0 ? (
+          {expenseCategoryChartData.length > 0 ? (
             <ResponsiveContainer width="100%" height={300}>
               <PieChart>
                 <Pie
-                  data={expenseCategoryData}
+                  data={expenseCategoryChartData}
                   cx="50%"
                   cy="50%"
                   labelLine={false}
@@ -370,7 +430,7 @@ export default function ReportsPage() {
                   fill="#8884d8"
                   dataKey="value"
                 >
-                  {expenseCategoryData.map((entry, index) => (
+                  {expenseCategoryChartData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
@@ -463,18 +523,72 @@ export default function ReportsPage() {
             <h3 className="text-lg font-light tracking-wide">Gider Detayı</h3>
           </div>
           <div className="p-4">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50 border-b-2 border-gray-300">
+                  <tr>
+                    <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-gray-700 font-semibold">Kategori</th>
+                    <th className="text-right px-4 py-3 text-xs uppercase tracking-wider text-gray-700 font-semibold">Toplam</th>
+                    <th className="text-right px-4 py-3 text-xs uppercase tracking-wider text-gray-700 font-semibold">Oran</th>
+                    <th className="text-right px-4 py-3 text-xs uppercase tracking-wider text-gray-700 font-semibold">Nakit</th>
+                    <th className="text-right px-4 py-3 text-xs uppercase tracking-wider text-gray-700 font-semibold">Kredi Kartı</th>
+                    <th className="text-right px-4 py-3 text-xs uppercase tracking-wider text-gray-700 font-semibold">Banka Transferi</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {expenseCategoryData.map((item, idx) => (
+                    <tr key={idx} className="border-b border-gray-200 hover:bg-gray-50 transition-colors">
+                      <td className="px-4 py-3 font-medium text-gray-900">{item.name}</td>
+                      <td className="text-right px-4 py-3 font-semibold text-gray-900 text-base">€{item.total.toFixed(2)}</td>
+                      <td className="text-right px-4 py-3 text-gray-600 text-sm">{item.percentage.toFixed(1)}%</td>
+                      <td className="text-right px-4 py-3 text-green-700 font-medium">{item.nakit > 0 ? `€${item.nakit.toFixed(2)}` : <span className="text-gray-400">-</span>}</td>
+                      <td className="text-right px-4 py-3 text-blue-700 font-medium">{item.krediKarti > 0 ? `€${item.krediKarti.toFixed(2)}` : <span className="text-gray-400">-</span>}</td>
+                      <td className="text-right px-4 py-3 text-purple-700 font-medium">{item.bankaTransferi > 0 ? `€${item.bankaTransferi.toFixed(2)}` : <span className="text-gray-400">-</span>}</td>
+                    </tr>
+                  ))}
+                  <tr className="font-bold bg-gray-100 border-t-2 border-gray-300">
+                    <td className="px-4 py-4 text-gray-900 uppercase text-sm">Toplam</td>
+                    <td className="text-right px-4 py-4 text-gray-900 font-bold text-base">€{expense.toFixed(2)}</td>
+                    <td className="text-right px-4 py-4 text-gray-600">&nbsp;</td>
+                    <td className="text-right px-4 py-4 text-green-800 font-bold text-base">{totalsByMethod.nakit > 0 ? `€${totalsByMethod.nakit.toFixed(2)}` : <span className="text-gray-400">-</span>}</td>
+                    <td className="text-right px-4 py-4 text-blue-800 font-bold text-base">{totalsByMethod.krediKarti > 0 ? `€${totalsByMethod.krediKarti.toFixed(2)}` : <span className="text-gray-400">-</span>}</td>
+                    <td className="text-right px-4 py-4 text-purple-800 font-bold text-base">{totalsByMethod.bankaTransferi > 0 ? `€${totalsByMethod.bankaTransferi.toFixed(2)}` : <span className="text-gray-400">-</span>}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Payment Method Summary Table */}
+      <div className="bg-white border border-gray-200 mt-6">
+        <div className="p-4 border-b border-gray-200">
+          <h3 className="text-lg font-light tracking-wide">Ödeme Yöntemi Dağılımı</h3>
+          <p className="text-xs text-gray-500 mt-1">Giderlerin ödeme şekline göre dağılımı</p>
+        </div>
+        <div className="p-4">
+          {paymentMethodData.length > 0 ? (
             <table className="w-full text-sm">
               <thead className="border-b border-gray-200">
                 <tr>
-                  <th className="text-left py-2 text-xs uppercase tracking-wide text-gray-600 font-light">Kategori</th>
+                  <th className="text-left py-2 text-xs uppercase tracking-wide text-gray-600 font-light">Ödeme Yöntemi</th>
                   <th className="text-right py-2 text-xs uppercase tracking-wide text-gray-600 font-light">Tutar</th>
                   <th className="text-right py-2 text-xs uppercase tracking-wide text-gray-600 font-light">Oran</th>
                 </tr>
               </thead>
               <tbody>
-                {expenseCategoryData.map((item, idx) => (
+                {paymentMethodData.map((item, idx) => (
                   <tr key={idx} className="border-b border-gray-100">
-                    <td className="py-2">{item.name}</td>
+                    <td className="py-2 flex items-center gap-2">
+                      <span className={`w-2 h-2 rounded-full ${
+                        item.name === 'Nakit' ? 'bg-green-500' : 
+                        item.name === 'Kredi Kartı' ? 'bg-blue-500' : 
+                        item.name === 'Banka Transferi' ? 'bg-purple-500' : 
+                        'bg-gray-400'
+                      }`}></span>
+                      {item.name}
+                    </td>
                     <td className="text-right py-2 text-red-600">€{item.value.toFixed(2)}</td>
                     <td className="text-right py-2">{item.percentage.toFixed(1)}%</td>
                   </tr>
@@ -486,7 +600,9 @@ export default function ReportsPage() {
                 </tr>
               </tbody>
             </table>
-          </div>
+          ) : (
+            <p className="text-gray-500 text-center py-6">Henüz ödeme yöntemi verisi yok</p>
+          )}
         </div>
       </div>
     </div>

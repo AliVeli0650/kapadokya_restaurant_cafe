@@ -334,6 +334,7 @@ export default function ExpensesPage() {
                   <select
                     value={paymentMethod}
                     onChange={(e) => setPaymentMethod(e.target.value)}
+                    required
                     className="w-full border border-gray-300 px-4 py-3 focus:outline-none focus:border-gray-900"
                   >
                     <option value="Nakit">Nakit</option>
