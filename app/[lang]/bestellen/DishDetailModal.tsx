@@ -49,11 +49,11 @@ export default function DishDetailModal({ dish, allergens, onClose, onAddToCart 
         <div className="p-6">
           {/* Image */}
           {dish.image_url ? (
-            <div className="w-full h-64 bg-gray-100 overflow-hidden mb-6">
+            <div className="w-full bg-gray-100 mb-6 flex justify-center">
               <img 
                 src={dish.image_url} 
                 alt={dish.name_de} 
-                className="w-full h-full object-cover"
+                className="max-w-full max-h-[400px] object-contain"
               />
             </div>
           ) : (

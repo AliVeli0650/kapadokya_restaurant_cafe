@@ -336,7 +336,17 @@ export default function DishesPage() {
 
           {/* Filters Bar */}
           <div className="bg-white p-4 rounded shadow mb-6 sticky top-0 z-10 border border-gray-200">
-            <div className="grid grid-cols-1 lg:grid-cols-6 gap-3">
+            <div className="grid grid-cols-1 lg:grid-cols-5 gap-3">
+              <div className="lg:col-span-2">
+                <label className="block text-xs text-gray-600 mb-1">Ara</label>
+                <input
+                  type="text"
+                  value={filterSearch}
+                  onChange={(e) => setFilterSearch(e.target.value)}
+                  placeholder="İsim veya açıklama..."
+                  className="w-full border p-2 rounded"
+                />
+              </div>
               <div>
                 <label className="block text-xs text-gray-600 mb-1">Kategori</label>
                 <select
@@ -349,16 +359,6 @@ export default function DishesPage() {
                     <option key={c.id} value={c.id}>{c.name_de}</option>
                   ))}
                 </select>
-              </div>
-              <div className="lg:col-span-2">
-                <label className="block text-xs text-gray-600 mb-1">Ara</label>
-                <input
-                  type="text"
-                  value={filterSearch}
-                  onChange={(e) => setFilterSearch(e.target.value)}
-                  placeholder="İsim veya açıklama..."
-                  className="w-full border p-2 rounded"
-                />
               </div>
               <div>
                 <label className="block text-xs text-gray-600 mb-1">Durum</label>
@@ -384,173 +384,23 @@ export default function DishesPage() {
                   <option value="without">Resimsiz</option>
                 </select>
               </div>
-              <div>
-                <label className="block text-xs text-gray-600 mb-1">Günün Yemeği</label>
-                <select
-                  value={filterDishOfDay}
-                  onChange={(e) => setFilterDishOfDay(e.target.value as any)}
-                  className="w-full border p-2 rounded"
-                >
-                  <option value="all">Tümü</option>
-                  <option value="yes">Evet</option>
-                  <option value="no">Hayır</option>
-                </select>
-              </div>
             </div>
-            <div className="grid grid-cols-1 lg:grid-cols-6 gap-3 mt-3">
-              <div>
-                <label className="block text-xs text-gray-600 mb-1">Min €</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={filterPriceMin}
-                  onChange={(e) => setFilterPriceMin(e.target.value)}
-                  className="w-full border p-2 rounded"
-                />
-              </div>
-              <div>
-                <label className="block text-xs text-gray-600 mb-1">Max €</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={filterPriceMax}
-                  onChange={(e) => setFilterPriceMax(e.target.value)}
-                  className="w-full border p-2 rounded"
-                />
-              </div>
-              <div className="lg:col-span-2">
-                <label className="block text-xs text-gray-600 mb-1">Sırala</label>
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value as any)}
-                  className="w-full border p-2 rounded"
-                >
-                  <option value="position">Sıra</option>
-                  <option value="name">İsim (A→Z)</option>
-                  <option value="priceAsc">Fiyat (Artan)</option>
-                  <option value="priceDesc">Fiyat (Azalan)</option>
-                </select>
-              </div>
-              <div className="flex items-end gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setFilterCategoryId('');
-                    setFilterSearch('');
-                    setFilterActive('all');
-                    setFilterHasImage('all');
-                    setFilterDishOfDay('all');
-                    setFilterPriceMin('');
-                    setFilterPriceMax('');
-                    setSortBy('position');
-                  }}
-                  className="border px-4 py-2 rounded"
-                >
-                  Filtreleri Sıfırla
-                </button>
-              </div>
+            <div className="flex justify-end mt-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setFilterCategoryId('');
+                  setFilterSearch('');
+                  setFilterActive('all');
+                  setFilterHasImage('all');
+                }}
+                className="text-sm text-gray-600 hover:text-gray-900 underline"
+              >
+                Filtreleri Temizle
+              </button>
             </div>
           </div>
-          <form onSubmit={handleDishSubmit} className="bg-white p-6 rounded shadow mb-6">
-            <h2 className="text-xl font-semibold mb-4">{editingDish ? 'Ürün Düzenle' : 'Yeni Ürün Ekle'}</h2>
-            <div className="grid grid-cols-2 gap-4 mb-4">
-              <select
-                value={dishForm.category_id}
-                onChange={(e) => setDishForm({ ...dishForm, category_id: e.target.value })}
-                className="border p-2 rounded"
-                required
-              >
-                <option value="">Kategori Seçin</option>
-                {categories.map((cat) => (
-                  <option key={cat.id} value={cat.id}>{cat.name_de}</option>
-                ))}
-              </select>
-              <input
-                type="text"
-                placeholder="Ürün Adı (Almanca)"
-                value={dishForm.name_de}
-                onChange={(e) => setDishForm({ ...dishForm, name_de: e.target.value })}
-                className="border p-2 rounded"
-                required
-              />
-              <input
-                type="text"
-                placeholder="Ürün Adı (Türkçe)"
-                value={dishForm.name_tr}
-                onChange={(e) => setDishForm({ ...dishForm, name_tr: e.target.value })}
-                className="border p-2 rounded"
-              />
-              <input
-                type="number"
-                step="0.01"
-                placeholder="Fiyat (€)"
-                value={dishForm.price}
-                onChange={(e) => setDishForm({ ...dishForm, price: e.target.value })}
-                className="border p-2 rounded"
-                required
-              />
-              <textarea
-                placeholder="Açıklama (Almanca)"
-                value={dishForm.description_de}
-                onChange={(e) => setDishForm({ ...dishForm, description_de: e.target.value })}
-                className="border p-2 rounded col-span-2"
-                rows={2}
-              />
-              <textarea
-                placeholder="Açıklama (Türkçe)"
-                value={dishForm.description_tr}
-                onChange={(e) => setDishForm({ ...dishForm, description_tr: e.target.value })}
-                className="border p-2 rounded col-span-2"
-                rows={2}
-              />
-              <input
-                type="number"
-                placeholder="Sıra"
-                value={dishForm.position}
-                onChange={(e) => setDishForm({ ...dishForm, position: parseInt(e.target.value) })}
-                className="border p-2 rounded"
-              />
-              <div className="flex flex-col gap-2">
-                <label className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={dishForm.is_active}
-                    onChange={(e) => setDishForm({ ...dishForm, is_active: e.target.checked })}
-                  />
-                  Aktif
-                </label>
-                <label className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={dishForm.is_dish_of_the_day}
-                    onChange={(e) => setDishForm({ ...dishForm, is_dish_of_the_day: e.target.checked })}
-                  />
-                  <span className="text-orange-600 font-semibold">⭐ Günün Yemeği</span>
-                </label>
-              </div>
-              <input type="file" accept="image/*" onChange={handleImageChange} className="border p-2 rounded col-span-2" />
-              {imagePreview && <img src={imagePreview} alt="Preview" className="w-32 h-32 object-cover rounded" />}
-            </div>
-            <div className="flex gap-2">
-              <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded">
-                {editingDish ? 'Güncelle' : 'Ekle'}
-              </button>
-              {editingDish && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setEditingDish(null);
-                    setDishForm({ category_id: '', name_de: '', name_tr: '', description_de: '', description_tr: '', price: '', position: 0, is_active: true, is_dish_of_the_day: false });
-                    setImageFile(null);
-                    setImagePreview('');
-                  }}
-                  className="bg-gray-400 text-white px-4 py-2 rounded"
-                >
-                  İptal
-                </button>
-              )}
-            </div>
-          </form>
+
 
           <div className="bg-white p-6 rounded shadow">
             <h2 className="text-xl font-semibold mb-4">Ürünler</h2>
@@ -560,6 +410,7 @@ export default function DishesPage() {
                   <th className="text-left p-2">Resim</th>
                   <th className="text-left p-2">Kategori</th>
                   <th className="text-left p-2">Almanca</th>
+                  <th className="text-left p-2">Türkçe</th>
                   <th className="text-left p-2">Fiyat</th>
                   <th className="text-left p-2">Sıra</th>
                   <th className="text-left p-2">Durum</th>
@@ -575,10 +426,6 @@ export default function DishesPage() {
                     if (filterActive === 'inactive' && dish.is_active) return false;
                     if (filterHasImage === 'with' && !dish.image_url) return false;
                     if (filterHasImage === 'without' && dish.image_url) return false;
-                    if (filterDishOfDay === 'yes' && !dish.is_dish_of_the_day) return false;
-                    if (filterDishOfDay === 'no' && dish.is_dish_of_the_day) return false;
-                    if (filterPriceMin && dish.price < Number(filterPriceMin)) return false;
-                    if (filterPriceMax && dish.price > Number(filterPriceMax)) return false;
                     if (filterSearch) {
                       const q = filterSearch.toLowerCase();
                       const hay = `${dish.name_de||''} ${dish.name_tr||''} ${dish.description_de||''} ${dish.description_tr||''}`.toLowerCase();
@@ -602,6 +449,7 @@ export default function DishesPage() {
                       </td>
                       <td className="p-2">{cat?.name_de}</td>
                       <td className="p-2">{dish.name_de}</td>
+                      <td className="p-2">{dish.name_tr}</td>
                       <td className="p-2">€{dish.price.toFixed(2)}</td>
                       <td className="p-2">{dish.position}</td>
                       <td className="p-2">{dish.is_active ? '✅' : '❌'}</td>

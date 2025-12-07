@@ -54,6 +54,7 @@ export default function BestellenPage() {
   const [showCheckout, setShowCheckout] = useState(false);
   const [selectedDish, setSelectedDish] = useState<Dish | null>(null);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
   const categoryRefs = useRef<{ [key: string]: HTMLElement | null }>({});
 
   // Checkout form states
@@ -68,6 +69,32 @@ export default function BestellenPage() {
     loadWhatsAppNumber();
     loadAllergens();
   }, []);
+
+  // Filter dishes based on search query
+  const getFilteredData = () => {
+    if (!searchQuery.trim()) {
+      return categories.map(cat => ({
+        ...cat,
+        dishes: dishes.filter(d => d.category_id === cat.id)
+      })).filter(cat => cat.dishes.length > 0);
+    }
+
+    const query = searchQuery.toLowerCase();
+    return categories.map(cat => ({
+      ...cat,
+      dishes: dishes.filter(d => 
+        d.category_id === cat.id && (
+          (d.name_de && d.name_de.toLowerCase().includes(query)) ||
+          (d.name_tr && d.name_tr.toLowerCase().includes(query)) ||
+          (d.description_de && d.description_de.toLowerCase().includes(query)) ||
+          (d.description_tr && d.description_tr.toLowerCase().includes(query)) ||
+          (d.menu_number && d.menu_number.toLowerCase().includes(query))
+        )
+      )
+    })).filter(cat => cat.dishes.length > 0);
+  };
+
+  const filteredData = getFilteredData();
 
   const loadMenu = async () => {
     try {
@@ -306,7 +333,47 @@ export default function BestellenPage() {
       </div>
 
       {/* Main Content - Two Column Layout */}
-      <div className="max-w-7xl mx-auto px-6 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+        {/* Search Bar */}
+        <div className="mb-8 relative">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </div>
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder={isGerman ? 'Suchen Sie nach Gerichten...' : 'Yemek ara...'}
+            className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:border-gray-900 focus:ring-1 focus:ring-gray-900 sm:text-sm shadow-sm"
+          />
+        </div>
+
+        {/* Mobile Category Navigation */}
+        <div className="lg:hidden sticky top-[70px] z-40 bg-gray-50 pb-4 -mx-6 px-6 overflow-x-auto shadow-sm">
+          <div className="flex gap-2">
+            {filteredData.map((category) => {
+              const categoryName = isGerman ? category.name_de : category.name_tr;
+              const displayName = categoryName.split(' / ')[0];
+              
+              return (
+                <button
+                  key={category.id}
+                  onClick={() => scrollToCategory(category.id)}
+                  className={`whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                    activeCategory === category.id
+                      ? 'bg-gray-900 text-white shadow-md'
+                      : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-100'
+                  }`}
+                >
+                  {displayName}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
         {/* Delivery fee notice */}
         <div className="mb-6">
           <div className="bg-amber-50 border border-amber-200 text-amber-900 text-sm px-4 py-3">
@@ -326,10 +393,7 @@ export default function BestellenPage() {
                   </h2>
                 </div>
                 <nav className="p-2">
-                  {categories.map((category) => {
-                    const categoryDishes = dishes.filter(d => d.category_id === category.id);
-                    if (categoryDishes.length === 0) return null;
-
+                  {filteredData.map((category) => {
                     const categoryName = isGerman ? category.name_de : category.name_tr;
                     const displayName = categoryName.split(' / ')[0];
                     const subName = categoryName.includes(' / ') ? categoryName.split(' / ')[1] : null;
@@ -360,18 +424,17 @@ export default function BestellenPage() {
 
           {/* Main Content - Dish List */}
           <main className="flex-1 min-w-0">
-            {categories.length === 0 ? (
+            {filteredData.length === 0 ? (
               <div className="text-center py-16 bg-white border border-gray-200">
                 <p className="text-lg text-gray-500">
-                  {isGerman ? 'Keine Gerichte verfügbar' : 'Mevcut yemek yok'}
+                  {searchQuery 
+                    ? (isGerman ? 'Keine Ergebnisse gefunden' : 'Sonuç bulunamadı')
+                    : (isGerman ? 'Keine Gerichte verfügbar' : 'Mevcut yemek yok')}
                 </p>
               </div>
             ) : (
               <div className="space-y-12">
-                {categories.map((category) => {
-                  const categoryDishes = dishes.filter(d => d.category_id === category.id);
-                  if (categoryDishes.length === 0) return null;
-
+                {filteredData.map((category) => {
                   const categoryName = isGerman ? category.name_de : category.name_tr;
                   const displayName = categoryName.split(' / ')[0];
                   const subName = categoryName.includes(' / ') ? categoryName.split(' / ')[1] : null;
@@ -380,7 +443,7 @@ export default function BestellenPage() {
                     <section
                       key={category.id}
                       ref={(el) => { categoryRefs.current[category.id] = el; }}
-                      className="scroll-mt-24"
+                      className="scroll-mt-32"
                     >
                       {/* Category Header */}
                       <div className="mb-6 pb-3 border-b-2 border-gray-900">
@@ -396,16 +459,16 @@ export default function BestellenPage() {
 
                       {/* Dishes List */}
                       <div className="space-y-3">
-                        {categoryDishes.map((dish) => (
+                        {category.dishes.map((dish) => (
                           <div
                             key={dish.id}
                             className="bg-white border border-gray-200 hover:shadow-md transition-shadow"
                           >
-                            <div className="flex gap-4 p-4">
+                            <div className="flex gap-3 p-3 md:gap-4 md:p-4">
                               {/* Dish Image */}
                               <button
                                 onClick={() => setSelectedDish(dish)}
-                                className="flex-shrink-0 w-20 h-20 md:w-24 md:h-24 bg-gray-100 overflow-hidden hover:opacity-90 transition-opacity"
+                                className="flex-shrink-0 w-16 h-16 md:w-24 md:h-24 bg-gray-100 overflow-hidden hover:opacity-90 transition-opacity rounded-md"
                               >
                                 {dish.image_url ? (
                                   <img
@@ -415,7 +478,7 @@ export default function BestellenPage() {
                                   />
                                 ) : (
                                   <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
-                                    <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg className="w-6 h-6 md:w-8 md:h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                     </svg>
                                   </div>
@@ -423,26 +486,24 @@ export default function BestellenPage() {
                               </button>
 
                               {/* Dish Info */}
-                              <div className="flex-1 min-w-0">
+                              <div className="flex-1 min-w-0 flex flex-col justify-between">
                                 <button
                                   onClick={() => setSelectedDish(dish)}
                                   className="text-left w-full group"
                                 >
-                                  <div className="flex items-start justify-between gap-2 mb-2">
-                                    <div className="flex-1 min-w-0">
-                                      <h3 className="font-medium text-gray-900 group-hover:text-gray-600 transition-colors">
-                                        {isGerman ? dish.name_de : dish.name_tr}
-                                      </h3>
-                                    </div>
-                                    <span className="text-lg font-semibold text-gray-900 whitespace-nowrap ml-2">
+                                  <div className="flex justify-between items-start gap-2 mb-1">
+                                    <h3 className="font-medium text-gray-900 text-sm md:text-base leading-tight group-hover:text-gray-600 transition-colors line-clamp-2">
+                                      {isGerman ? dish.name_de : dish.name_tr}
+                                    </h3>
+                                    <span className="font-semibold text-gray-900 text-sm md:text-lg whitespace-nowrap">
                                       €{dish.price.toFixed(2)}
                                     </span>
                                   </div>
 
                                   {/* Menu Number & Allergen Badges */}
-                                  <div className="flex items-center gap-1.5 flex-wrap mb-2">
+                                  <div className="flex items-center gap-1 flex-wrap mb-1">
                                     {dish.menu_number && (
-                                      <span className="text-[10px] uppercase tracking-wide px-1.5 py-0.5 bg-gray-900 text-white font-medium">
+                                      <span className="text-[10px] uppercase tracking-wide px-1.5 py-0.5 bg-gray-900 text-white font-medium rounded-sm">
                                         Nr. {dish.menu_number}
                                       </span>
                                     )}
@@ -450,7 +511,7 @@ export default function BestellenPage() {
                                       dish.allergen_codes.map((code) => (
                                         <span
                                           key={`${dish.id}-${code}`}
-                                          className="text-[10px] px-1.5 py-0.5 bg-amber-100 border border-amber-300 text-amber-900 font-medium"
+                                          className="text-[10px] px-1.5 py-0.5 bg-amber-100 border border-amber-300 text-amber-900 font-medium rounded-sm"
                                         >
                                           {String(code).toUpperCase()}
                                         </span>
@@ -460,7 +521,7 @@ export default function BestellenPage() {
 
                                   {/* Description */}
                                   {(isGerman ? dish.description_de : dish.description_tr) && (
-                                    <p className="text-sm text-gray-600 line-clamp-2">
+                                    <p className="text-xs md:text-sm text-gray-600 line-clamp-2">
                                       {isGerman ? dish.description_de : dish.description_tr}
                                     </p>
                                   )}
@@ -468,13 +529,13 @@ export default function BestellenPage() {
                               </div>
 
                               {/* Quick Add Button */}
-                              <div className="flex-shrink-0 flex items-center">
+                              <div className="flex-shrink-0 flex items-start pt-1">
                                 <button
                                   onClick={() => addToCart(dish)}
-                                  className="w-10 h-10 md:w-12 md:h-12 bg-gray-900 hover:bg-gray-700 text-white flex items-center justify-center transition-colors group"
+                                  className="w-8 h-8 md:w-12 md:h-12 bg-gray-900 hover:bg-gray-700 text-white flex items-center justify-center transition-colors group rounded-full md:rounded-none"
                                   title={isGerman ? 'In den Warenkorb' : 'Sepete ekle'}
                                 >
-                                  <svg className="w-5 h-5 md:w-6 md:h-6 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <svg className="w-4 h-4 md:w-6 md:h-6 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                                   </svg>
                                 </button>
