@@ -69,7 +69,10 @@ export default function Navbar() {
               </Link>
             </li>
             <li>
-              <Link href={`/${currentLocale}/bestellen`} className={`${isHomePage ? 'text-white hover:text-gray-200' : 'text-gray-700 hover:text-gray-900'} transition-colors`}>
+              <Link
+                href={isGerman ? '/de/bestellen/redirect' : '/tr/bestellen/redirect'}
+                className={`${isHomePage ? 'text-white hover:text-gray-200' : 'text-gray-700 hover:text-gray-900'} transition-colors`}
+              >
                 {isGerman ? 'Bestellen' : 'Sipariş'}
               </Link>
             </li>
@@ -157,8 +160,8 @@ export default function Navbar() {
               >
                 {isGerman ? 'Speisekarte' : 'Menü'}
               </Link>
-              <Link 
-                href={`/${currentLocale}/bestellen`} 
+              <Link
+                href={isGerman ? '/de/bestellen/redirect' : '/tr/bestellen/redirect'}
                 onClick={closeMobileMenu}
                 className="block py-3 text-gray-900 hover:text-gray-600 text-lg border-b border-gray-100"
               >

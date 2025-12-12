@@ -356,7 +356,7 @@ export default function DishesPage() {
                 >
                   <option value="">Tümü</option>
                   {categories.map((c) => (
-                    <option key={c.id} value={c.id}>{c.name_de}</option>
+                    <option key={c.id} value={c.id}>{c.name_tr} / {c.name_de}</option>
                   ))}
                 </select>
               </div>

@@ -351,11 +351,10 @@ export default function BestellenPage() {
         </div>
 
         {/* Mobile Category Navigation */}
-        <div className="lg:hidden sticky top-[70px] z-40 bg-gray-50 pb-4 -mx-6 px-6 overflow-x-auto shadow-sm">
+        <div className="lg:hidden sticky top-[70px] z-40 bg-gray-50 pb-4 -mx-6 px-6 overflow-x-auto shadow-sm no-scrollbar">
           <div className="flex gap-2">
             {filteredData.map((category) => {
-              const categoryName = isGerman ? category.name_de : category.name_tr;
-              const displayName = categoryName.split(' / ')[0];
+              const displayName = isGerman ? category.name_de : category.name_tr;
               
               return (
                 <button
@@ -394,9 +393,9 @@ export default function BestellenPage() {
                 </div>
                 <nav className="p-2">
                   {filteredData.map((category) => {
-                    const categoryName = isGerman ? category.name_de : category.name_tr;
-                    const displayName = categoryName.split(' / ')[0];
-                    const subName = categoryName.includes(' / ') ? categoryName.split(' / ')[1] : null;
+                    const displayName = isGerman ? category.name_de : category.name_tr;
+                    const otherName = isGerman ? category.name_tr : category.name_de;
+                    const subName = displayName !== otherName ? otherName : null;
 
                     return (
                       <button
@@ -435,9 +434,9 @@ export default function BestellenPage() {
             ) : (
               <div className="space-y-12">
                 {filteredData.map((category) => {
-                  const categoryName = isGerman ? category.name_de : category.name_tr;
-                  const displayName = categoryName.split(' / ')[0];
-                  const subName = categoryName.includes(' / ') ? categoryName.split(' / ')[1] : null;
+                  const displayName = isGerman ? category.name_de : category.name_tr;
+                  const otherName = isGerman ? category.name_tr : category.name_de;
+                  const subName = displayName !== otherName ? otherName : null;
 
                   return (
                     <section
@@ -678,6 +677,7 @@ export default function BestellenPage() {
         <DishDetailModal
           dish={selectedDish}
           allergens={allergens}
+          isGerman={isGerman}
           onClose={() => setSelectedDish(null)}
           onAddToCart={addToCart}
         />

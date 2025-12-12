@@ -12,11 +12,12 @@ interface Allergen {
 interface DishDetailModalProps {
   dish: Dish;
   allergens: Allergen[];
+  isGerman: boolean;
   onClose: () => void;
   onAddToCart: (dish: Dish) => void;
 }
 
-export default function DishDetailModal({ dish, allergens, onClose, onAddToCart }: DishDetailModalProps) {
+export default function DishDetailModal({ dish, allergens, isGerman, onClose, onAddToCart }: DishDetailModalProps) {
   const handleAddToCart = () => {
     onAddToCart(dish);
     onClose();
@@ -26,6 +27,11 @@ export default function DishDetailModal({ dish, allergens, onClose, onAddToCart 
     ?.map(code => allergens.find(a => a.code.toLowerCase() === code.toLowerCase()))
     .filter(Boolean) as Allergen[];
 
+  const mainName = isGerman ? dish.name_de : dish.name_tr;
+  const subName = isGerman ? dish.name_tr : dish.name_de;
+  const mainDesc = isGerman ? dish.description_de : dish.description_tr;
+  const subDesc = isGerman ? dish.description_tr : dish.description_de;
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4" onClick={onClose}>
       <div 
@@ -34,7 +40,7 @@ export default function DishDetailModal({ dish, allergens, onClose, onAddToCart 
       >
         {/* Header with close button */}
         <div className="sticky top-0 bg-white border-b border-gray-200 p-4 flex justify-between items-center z-10">
-          <h3 className="text-xl font-medium text-gray-900">{dish.name_de}</h3>
+          <h3 className="text-xl font-medium text-gray-900">{mainName}</h3>
           <button
             onClick={onClose}
             className="text-gray-400 hover:text-gray-900 transition-colors"
@@ -52,7 +58,7 @@ export default function DishDetailModal({ dish, allergens, onClose, onAddToCart 
             <div className="w-full bg-gray-100 mb-6 flex justify-center">
               <img 
                 src={dish.image_url} 
-                alt={dish.name_de} 
+                alt={mainName} 
                 className="max-w-full max-h-[400px] object-contain"
               />
             </div>
@@ -68,44 +74,56 @@ export default function DishDetailModal({ dish, allergens, onClose, onAddToCart 
           <div className="grid grid-cols-2 gap-4 mb-6">
             {dish.menu_number && (
               <div>
-                <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Menü-Nr.</p>
+                <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">
+                  {isGerman ? 'Menü-Nr.' : 'Menü No'}
+                </p>
                 <p className="text-sm font-medium">{dish.menu_number}</p>
               </div>
             )}
             <div>
-              <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Preis</p>
+              <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">
+                {isGerman ? 'Preis' : 'Fiyat'}
+              </p>
               <p className="text-2xl font-semibold text-gray-900">€{dish.price.toFixed(2)}</p>
             </div>
           </div>
 
-          {/* Turkish Name */}
-          {dish.name_tr && dish.name_tr !== dish.name_de && (
+          {/* Secondary Name (if different) */}
+          {subName && subName !== mainName && (
             <div className="mb-6">
-              <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Türkischer Name</p>
-              <p className="text-sm text-gray-700">{dish.name_tr}</p>
+              <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">
+                {isGerman ? 'Türkischer Name' : 'Almanca Adı'}
+              </p>
+              <p className="text-sm text-gray-700">{subName}</p>
             </div>
           )}
 
           {/* Description */}
-          {dish.description_de && (
+          {mainDesc && (
             <div className="mb-6">
-              <p className="text-xs text-gray-500 uppercase tracking-wide mb-2">Beschreibung</p>
-              <p className="text-sm text-gray-700 leading-relaxed">{dish.description_de}</p>
+              <p className="text-xs text-gray-500 uppercase tracking-wide mb-2">
+                {isGerman ? 'Beschreibung' : 'Açıklama'}
+              </p>
+              <p className="text-sm text-gray-700 leading-relaxed">{mainDesc}</p>
             </div>
           )}
 
-          {/* Turkish Description */}
-          {dish.description_tr && dish.description_tr !== dish.description_de && (
+          {/* Secondary Description */}
+          {subDesc && subDesc !== mainDesc && (
             <div className="mb-6">
-              <p className="text-xs text-gray-500 uppercase tracking-wide mb-2">Türkische Beschreibung</p>
-              <p className="text-sm text-gray-700 leading-relaxed">{dish.description_tr}</p>
+              <p className="text-xs text-gray-500 uppercase tracking-wide mb-2">
+                {isGerman ? 'Türkische Beschreibung' : 'Almanca Açıklama'}
+              </p>
+              <p className="text-sm text-gray-700 leading-relaxed">{subDesc}</p>
             </div>
           )}
 
           {/* Ingredients */}
           {dish.ingredients && (
             <div className="mb-6">
-              <p className="text-xs text-gray-500 uppercase tracking-wide mb-2">Zutaten</p>
+              <p className="text-xs text-gray-500 uppercase tracking-wide mb-2">
+                {isGerman ? 'Zutaten' : 'İçindekiler'}
+              </p>
               <p className="text-sm text-gray-700 leading-relaxed">{dish.ingredients}</p>
             </div>
           )}
@@ -118,7 +136,9 @@ export default function DishDetailModal({ dish, allergens, onClose, onAddToCart 
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                 </svg>
                 <div className="flex-1">
-                  <p className="text-xs text-amber-900 uppercase tracking-wide font-semibold mb-2">Allergene & Zusatzstoffe</p>
+                  <p className="text-xs text-amber-900 uppercase tracking-wide font-semibold mb-2">
+                    {isGerman ? 'Allergene & Zusatzstoffe' : 'Alerjenler & Katkı Maddeleri'}
+                  </p>
                   <div className="space-y-2">
                     {dishAllergens.map((allergen) => (
                       <div key={allergen.code} className="flex items-start gap-2">
@@ -126,10 +146,12 @@ export default function DishDetailModal({ dish, allergens, onClose, onAddToCart 
                           {allergen.code.toUpperCase()}
                         </span>
                         <span className="text-sm text-amber-900 flex-1">
-                          {allergen.name_de}
-                          {allergen.name_tr && allergen.name_tr !== allergen.name_de && (
-                            <span className="text-amber-700 ml-2">({allergen.name_tr})</span>
-                          )}
+                          {isGerman ? allergen.name_de : allergen.name_tr}
+                          {/* Show other language in brackets if different */}
+                          {isGerman 
+                            ? (allergen.name_tr && allergen.name_tr !== allergen.name_de && <span className="text-amber-700 ml-2">({allergen.name_tr})</span>)
+                            : (allergen.name_de && allergen.name_de !== allergen.name_tr && <span className="text-amber-700 ml-2">({allergen.name_de})</span>)
+                          }
                         </span>
                       </div>
                     ))}
@@ -142,7 +164,9 @@ export default function DishDetailModal({ dish, allergens, onClose, onAddToCart 
           {/* Raw Details (if any) */}
           {dish.raw_details && (
             <div className="mb-6">
-              <p className="text-xs text-gray-500 uppercase tracking-wide mb-2">Weitere Informationen</p>
+              <p className="text-xs text-gray-500 uppercase tracking-wide mb-2">
+                {isGerman ? 'Weitere Informationen' : 'Ek Bilgiler'}
+              </p>
               <p className="text-xs text-gray-600 leading-relaxed">{dish.raw_details}</p>
             </div>
           )}
@@ -155,7 +179,7 @@ export default function DishDetailModal({ dish, allergens, onClose, onAddToCart 
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
             </svg>
-            In den Warenkorb
+            {isGerman ? 'In den Warenkorb' : 'Sepete Ekle'}
           </button>
         </div>
       </div>
