@@ -123,12 +123,13 @@ export default function ContactPage() {
               </h2>
               
               <div className="space-y-6">
+
                 <div>
                   <h3 className="text-sm uppercase tracking-wide text-gray-500 mb-2">
                     {isGerman ? 'Adresse' : 'Adres'}
                   </h3>
                   <p className="text-gray-900">
-                    Elberfelder Str. 51<br />
+                    Bahnhofstraße 45<br />
                     58095 Hagen, Deutschland
                   </p>
                 </div>
@@ -137,15 +138,15 @@ export default function ContactPage() {
                   <h3 className="text-sm uppercase tracking-wide text-gray-500 mb-2">
                     {isGerman ? 'Telefon' : 'Telefon'}
                   </h3>
-                  <a href="tel:023314899898" className="text-gray-900 hover:text-gray-600 transition-colors">
-                    02331 4899898
+                  <a href="tel:023313493334" className="text-gray-900 hover:text-gray-600 transition-colors">
+                    02331 3493334
                   </a>
                 </div>
 
                 <div>
                   <h3 className="text-sm uppercase tracking-wide text-gray-500 mb-2">E-Mail</h3>
-                  <a href="mailto:info@kapadokya-hagen.de" className="text-gray-900 hover:text-gray-600 transition-colors">
-                    info@kapadokya-hagen.de
+                  <a href="mailto:info@kapadokya-cafe.de" className="text-gray-900 hover:text-gray-600 transition-colors">
+                    info@kapadokya-cafe.de
                   </a>
                 </div>
 
@@ -163,10 +164,17 @@ export default function ContactPage() {
             </div>
 
             {/* Map */}
-            <div className="bg-gray-200 h-80 border border-gray-200 flex items-center justify-center">
-              <p className="text-gray-500">
-                {isGerman ? 'Google Maps wird hier eingebettet' : 'Google Maps buraya yerleştirilecek'}
-              </p>
+            <div className="bg-gray-200 h-80 border border-gray-200 flex items-center justify-center p-0 overflow-hidden">
+              <iframe
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2521.964964024052!2d7.4606594!3d51.3611134!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x47b93bcef4447bed%3A0x93bcc3a213e7111d!2sKapadokya%20Restaurant%20%26%20Caf%C3%A9%20Hagen%2C%20Bahnhofstra%C3%9Fe%2045%2C%2058095%20Hagen!5e0!3m2!1str!2sde!4v1700000000000!5m2!1str!2sde"
+                width="100%"
+                height="100%"
+                style={{ border: 0 }}
+                allowFullScreen={true}
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                title="Kapadokya Restaurant & Café Hagen Google Maps"
+              ></iframe>
             </div>
 
           </div>

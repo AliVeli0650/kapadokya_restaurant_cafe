@@ -9,7 +9,7 @@ export default function RedirectUberEatsDe() {
           Bestellungen nehmen wir aktuell über UberEats entgegen.<br />
           Bitte klicken Sie auf den Button unten, um Ihre Bestellung aufzugeben.
         </p>
-        <Link href="https://www.ubereats.com/de" target="_blank" rel="noopener noreferrer">
+        <Link href="https://share.google/Ni4sw9X5bijtYnn3Y" target="_blank" rel="noopener noreferrer">
           <span className="inline-block bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded transition-colors duration-200">
             Über UberEats bestellen
           </span>

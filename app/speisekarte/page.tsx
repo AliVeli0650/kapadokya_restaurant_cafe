@@ -72,7 +72,7 @@ export default async function SpeisekartePage() {
               </p>
             </div>
             <a
-              href="/de/bestellen"
+              href="/tr/bestellen/redirect"
               className="bg-white text-gray-900 px-6 md:px-8 py-3 md:py-4 text-sm uppercase tracking-wide font-semibold hover:bg-gray-100 transition-colors inline-block text-center"
             >
               Online Bestellen

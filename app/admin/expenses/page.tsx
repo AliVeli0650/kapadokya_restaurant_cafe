@@ -87,8 +87,7 @@ export default function ExpensesPage() {
             name
           )
         `)
-        .order('expense_date', { ascending: false })
-        .limit(100);
+        .order('expense_date', { ascending: false });
 
       if (filterCategory) {
         query = query.eq('category_id', filterCategory);
