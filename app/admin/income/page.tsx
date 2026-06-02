@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState, useEffect } from 'react';
 import { supabase } from '../../../lib/supabaseClient';
@@ -35,6 +35,7 @@ export default function IncomePage() {
   const [sources, setSources] = useState<IncomeSource[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [selectedSource, setSelectedSource] = useState('');
   const [amount, setAmount] = useState('');
@@ -85,15 +86,27 @@ export default function IncomePage() {
     
     try {
       setSubmitting(true);
-      const { error } = await supabase.from('income_transactions').insert({ 
-        source_id: selectedSource, 
-        amount: amountNum,
-        amount_official: amountOfficialNum,
-        description: description.trim() || null, 
-        transaction_date: selectedDate 
-      });
-      if (error) throw error;
-      toast.success('Gelir kaydı başarıyla eklendi!');
+      if (editingId) {
+        const { error } = await supabase.from('income_transactions').update({ 
+          source_id: selectedSource, 
+          amount: amountNum,
+          amount_official: amountOfficialNum,
+          description: description.trim() || null, 
+          transaction_date: selectedDate 
+        }).eq('id', editingId);
+        if (error) throw error;
+        toast.success('Gelir kaydı güncellendi!');
+      } else {
+        const { error } = await supabase.from('income_transactions').insert({ 
+          source_id: selectedSource, 
+          amount: amountNum,
+          amount_official: amountOfficialNum,
+          description: description.trim() || null, 
+          transaction_date: selectedDate 
+        });
+        if (error) throw error;
+        toast.success('Gelir kaydı başarıyla eklendi!');
+      }
       setShowForm(false);
       resetForm();
       loadData();
@@ -105,11 +118,23 @@ export default function IncomePage() {
   };
 
   const resetForm = () => {
+    setEditingId(null);
     setSelectedDate(new Date().toISOString().split('T')[0]);
     setSelectedSource('');
     setAmount('');
     setAmountOfficial('');
     setDescription('');
+  };
+
+  const handleEdit = (transaction: IncomeTransaction) => {
+    setEditingId(transaction.id);
+    setSelectedDate(transaction.transaction_date);
+    setSelectedSource(transaction.source_id);
+    setAmount(transaction.amount.toString());
+    setAmountOfficial(transaction.amount_official ? transaction.amount_official.toString() : '');
+    setDescription(transaction.description || '');
+    setShowForm(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleDelete = async (id: string) => {
@@ -147,11 +172,19 @@ export default function IncomePage() {
             <h1 className="text-4xl font-light tracking-wide text-gray-900">Gelir Yönetimi</h1>
             <p className="text-gray-600 mt-2">Her bir gelir işlemini ayrı ayrı kaydedin</p>
           </div>
-          <button onClick={() => setShowForm(!showForm)} className="bg-gray-900 text-white px-6 py-3 uppercase text-sm tracking-wide hover:bg-gray-700 transition-colors">{showForm ? 'Formu Kapat' : '+ Yeni Gelir Ekle'}</button>
+          <button 
+            onClick={() => {
+              if (showForm && editingId) resetForm();
+              setShowForm(!showForm);
+            }} 
+            className="bg-gray-900 text-white px-6 py-3 uppercase text-sm tracking-wide hover:bg-gray-700 transition-colors"
+          >
+            {showForm ? 'Formu Kapat' : '+ Yeni Gelir Ekle'}
+          </button>
         </div>
         {showForm && (
           <div className="bg-white border border-gray-200 p-8 mb-8">
-            <h2 className="text-2xl font-light tracking-wide mb-2">Yeni Gelir İşlemi</h2>
+            <h2 className="text-2xl font-light tracking-wide mb-2">{editingId ? 'Gelir Kaydını Düzenle' : 'Yeni Gelir İşlemi'}</h2>
             <p className="text-sm text-gray-600 mb-6">Her bir geliri (nakit, kart, online sipariş) ayrı ayrı kaydedin. Gün sonunda tüm işlemler otomatik toplanır.</p>
             <form onSubmit={handleSubmit}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
@@ -197,7 +230,7 @@ export default function IncomePage() {
                 />
               </div>
               <div className="flex gap-4">
-                <button type="submit" disabled={submitting} className="bg-gray-900 text-white px-8 py-3 uppercase text-sm tracking-wide hover:bg-gray-700 transition-colors disabled:opacity-50">{submitting ? 'Kaydediliyor...' : 'Kaydet'}</button>
+                <button type="submit" disabled={submitting} className="bg-gray-900 text-white px-8 py-3 uppercase text-sm tracking-wide hover:bg-gray-700 transition-colors disabled:opacity-50">{submitting ? 'Kaydediliyor...' : (editingId ? 'Güncelle' : 'Kaydet')}</button>
                 <button type="button" onClick={() => { setShowForm(false); resetForm(); }} className="border border-gray-300 px-8 py-3 uppercase text-sm tracking-wide hover:border-gray-900 transition-colors">İptal</button>
               </div>
             </form>
@@ -241,25 +274,66 @@ export default function IncomePage() {
                     <p className="text-xs text-green-600 mt-1">Esas: €{summary.transactions.reduce((sum, t) => sum + Number(t.amount_official || t.amount), 0).toFixed(2)}</p>
                   </div>
                 </div>
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead className="bg-gray-50 border-b border-gray-200"><tr><th className="px-6 py-3 text-left text-xs uppercase tracking-wide text-gray-600 font-light">Kaynak</th><th className="px-6 py-3 text-right text-xs uppercase tracking-wide text-gray-600 font-light">Tutar</th><th className="px-6 py-3 text-left text-xs uppercase tracking-wide text-gray-600 font-light">Açıklama</th><th className="px-6 py-3 text-left text-xs uppercase tracking-wide text-gray-600 font-light">Eklenme Zamanı</th><th className="px-6 py-3 text-center text-xs uppercase tracking-wide text-gray-600 font-light">İşlem</th></tr></thead>
-                    <tbody>
-                      {summary.transactions.map((transaction) => (
-                        <tr key={transaction.id} className="border-b border-gray-100 hover:bg-gray-50">
-                          <td className="px-6 py-4 text-sm text-gray-900">{transaction.income_sources?.name || 'Bilinmeyen'}</td>
-                          <td className="px-6 py-4 text-right">
-                            <div className="font-medium text-gray-900">€{Number(transaction.amount).toFixed(2)}</div>
-                            <div className="text-xs text-green-600 mt-0.5">€{Number(transaction.amount_official || transaction.amount).toFixed(2)}</div>
-                          </td>
-                          <td className="px-6 py-4 text-sm text-gray-600">{transaction.description || '-'}</td>
-                          <td className="px-6 py-4 text-sm text-gray-500">{new Date(transaction.created_at).toLocaleString('tr-TR')}</td>
-                          <td className="px-6 py-4 text-center"><button onClick={() => handleDelete(transaction.id)} className="text-red-600 hover:text-red-800 text-sm">Sil</button></td>
+                <>
+                  {/* Mobile Card View */}
+                  <div className="md:hidden divide-y divide-gray-100">
+                    {summary.transactions.map((transaction) => (
+                      <div key={transaction.id} className="p-4 bg-white hover:bg-gray-50">
+                        <div className="flex justify-between items-start mb-2">
+                          <div className="font-medium text-gray-900">{transaction.income_sources?.name || 'Bilinmeyen'}</div>
+                          <div className="text-right">
+                            <div className="font-bold text-gray-900">€{Number(transaction.amount).toFixed(2)}</div>
+                            <div className="text-[10px] text-green-600 mt-0.5">Esas: €{Number(transaction.amount_official || transaction.amount).toFixed(2)}</div>
+                          </div>
+                        </div>
+                        
+                        {transaction.description && (
+                          <div className="text-sm text-gray-600 mb-2">{transaction.description}</div>
+                        )}
+                        
+                        <div className="flex justify-between items-center text-xs text-gray-500 mt-3 pt-3 border-t border-gray-50">
+                          <div>{new Date(transaction.created_at).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}</div>
+                          <div>
+                            <button onClick={() => handleEdit(transaction)} className="text-blue-500 hover:text-blue-700 font-medium mr-4">Düzenle</button>
+                            <button onClick={() => handleDelete(transaction.id)} className="text-red-500 hover:text-red-700 font-medium">Sil</button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Desktop Table View */}
+                  <div className="hidden md:block overflow-x-auto">
+                    <table className="w-full">
+                      <thead className="bg-gray-50 border-b border-gray-200">
+                        <tr>
+                          <th className="px-6 py-3 text-left text-xs uppercase tracking-wide text-gray-600 font-light whitespace-nowrap">Kaynak</th>
+                          <th className="px-6 py-3 text-right text-xs uppercase tracking-wide text-gray-600 font-light">Tutar</th>
+                          <th className="px-6 py-3 text-left text-xs uppercase tracking-wide text-gray-600 font-light">Açıklama</th>
+                          <th className="px-6 py-3 text-left text-xs uppercase tracking-wide text-gray-600 font-light whitespace-nowrap">Eklenme Zamanı</th>
+                          <th className="px-6 py-3 text-center text-xs uppercase tracking-wide text-gray-600 font-light">İşlem</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                      </thead>
+                      <tbody>
+                        {summary.transactions.map((transaction) => (
+                          <tr key={transaction.id} className="border-b border-gray-100 hover:bg-gray-50">
+                            <td className="px-6 py-4 text-sm text-gray-900 whitespace-nowrap">{transaction.income_sources?.name || 'Bilinmeyen'}</td>
+                            <td className="px-6 py-4 text-right whitespace-nowrap">
+                              <div className="font-medium text-gray-900">€{Number(transaction.amount).toFixed(2)}</div>
+                              <div className="text-xs text-green-600 mt-0.5">€{Number(transaction.amount_official || transaction.amount).toFixed(2)}</div>
+                            </td>
+                            <td className="px-6 py-4 text-sm text-gray-600">{transaction.description || '-'}</td>
+                            <td className="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">{new Date(transaction.created_at).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}</td>
+                            <td className="px-6 py-4 text-center">
+                              <button onClick={() => handleEdit(transaction)} className="text-blue-600 hover:text-blue-800 text-sm mr-3">Düzenle</button>
+                              <button onClick={() => handleDelete(transaction.id)} className="text-red-600 hover:text-red-800 text-sm">Sil</button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </>
               </div>
             ))
           )}

@@ -51,6 +51,9 @@ function Sidebar({ onSignOut, isOpen, onClose }: { onSignOut: () => void; isOpen
             <Link href="/admin/expenses" onClick={onClose} className="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 rounded">💸 Gider Ekle</Link>
             <Link href="/admin/reports" onClick={onClose} className="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 rounded">📈 Raporlar</Link>
 
+            <p className="px-4 text-xs uppercase tracking-wide text-gray-500 font-semibold mt-4 mb-1">Personel</p>
+            <Link href="/admin/personnel" onClick={onClose} className="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 rounded">👥 Personel Yönetimi</Link>
+
             <p className="px-4 text-xs uppercase tracking-wide text-gray-500 font-semibold mt-4 mb-1">Menü</p>
             <Link href="/admin/website/menus" onClick={onClose} className="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 rounded">📋 Menü Fotoğrafları</Link>
             <Link href="/admin/website/dishes" onClick={onClose} className="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 rounded">🍽️ Online Sipariş Menüsü</Link>

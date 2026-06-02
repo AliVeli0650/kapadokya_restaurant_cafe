@@ -26,17 +26,30 @@ interface Expense {
   expense_categories: {
     name: string;
   };
+  personnel?: {
+    first_name: string;
+    last_name: string;
+  } | null;
+}
+
+interface Personnel {
+  id: string;
+  first_name: string;
+  last_name: string;
 }
 
 export default function ExpensesPage() {
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [categories, setCategories] = useState<ExpenseCategory[]>([]);
+  const [personnelList, setPersonnelList] = useState<Personnel[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   
   // Form states
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [categoryId, setCategoryId] = useState('');
+  const [personnelId, setPersonnelId] = useState('');
   const [amount, setAmount] = useState('');
   const [amountOfficial, setAmountOfficial] = useState('');
   const [description, setDescription] = useState('');
@@ -67,6 +80,17 @@ export default function ExpensesPage() {
       if (categoriesError) throw categoriesError;
       setCategories(categoriesData || []);
 
+      // Load personnel
+      const { data: personnelData, error: personnelError } = await supabase
+        .from('personnel')
+        .select('id, first_name, last_name')
+        .eq('is_active', true)
+        .order('first_name');
+        
+      if (!personnelError) {
+        setPersonnelList(personnelData || []);
+      }
+
       // Load expenses
       await loadExpenses();
     } catch (error) {
@@ -85,6 +109,10 @@ export default function ExpensesPage() {
           *,
           expense_categories (
             name
+          ),
+          personnel (
+            first_name,
+            last_name
           )
         `)
         .order('expense_date', { ascending: false });
@@ -125,6 +153,17 @@ export default function ExpensesPage() {
       return;
     }
 
+    const selectedCatObj = categories.find(c => c.id.toString() === categoryId.toString());
+    const isPersonnelCategory = selectedCatObj?.name === 'Personel' || 
+                                selectedCatObj?.name === 'Avans' || 
+                                selectedCatObj?.name === 'Maaş' ||
+                                categories.find(c => c.id.toString() === selectedCatObj?.parent_id?.toString())?.name === 'Personel';
+    
+    if (isPersonnelCategory && !personnelId) {
+      toast.error('Personel gideri için personel seçimi zorunludur.');
+      return;
+    }
+
     const amountNum = parseFloat(amount);
     if (isNaN(amountNum) || amountNum <= 0) {
       toast.error('Lütfen geçerli bir tutar giriniz.');
@@ -141,23 +180,42 @@ export default function ExpensesPage() {
     try {
       setSubmitting(true);
 
-      const { data, error } = await supabase
-        .from('expenses')
-        .insert({
-          category_id: categoryId,
-          amount: amountNum,
-          amount_official: amountOfficialNum,
-          description,
-          expense_date: selectedDate,
-          vendor: vendor || null,
-          invoice_number: invoiceNumber || null,
-          payment_method: paymentMethod,
-        })
-        .select();
+      if (editingId) {
+        const { error } = await supabase
+          .from('expenses')
+          .update({
+            category_id: categoryId,
+            amount: amountNum,
+            amount_official: amountOfficialNum,
+            description,
+            expense_date: selectedDate,
+            personnel_id: isPersonnelCategory ? personnelId : null,
+            vendor: vendor || null,
+            invoice_number: invoiceNumber || null,
+            payment_method: paymentMethod,
+          })
+          .eq('id', editingId);
 
-      if (error) throw error;
+        if (error) throw error;
+        toast.success('Gider kaydı güncellendi!');
+      } else {
+        const { error } = await supabase
+          .from('expenses')
+          .insert({
+            category_id: categoryId,
+            amount: amountNum,
+            amount_official: amountOfficialNum,
+            description,
+            expense_date: selectedDate,
+            personnel_id: isPersonnelCategory ? personnelId : null,
+            vendor: vendor || null,
+            invoice_number: invoiceNumber || null,
+            payment_method: paymentMethod,
+          });
 
-      toast.success('Gider kaydı başarıyla eklendi!');
+        if (error) throw error;
+        toast.success('Gider kaydı başarıyla eklendi!');
+      }
       setShowForm(false);
       resetForm();
       loadExpenses();
@@ -170,14 +228,31 @@ export default function ExpensesPage() {
   };
 
   const resetForm = () => {
+    setEditingId(null);
     setSelectedDate(new Date().toISOString().split('T')[0]);
     setCategoryId('');
+    setPersonnelId('');
     setAmount('');
     setAmountOfficial('');
     setDescription('');
     setVendor('');
     setInvoiceNumber('');
     setPaymentMethod('Nakit');
+  };
+
+  const handleEdit = (expense: any) => {
+    setEditingId(expense.id);
+    setSelectedDate(expense.expense_date);
+    setCategoryId(expense.category_id);
+    setPersonnelId(expense.personnel_id || '');
+    setAmount(expense.amount.toString());
+    setAmountOfficial(expense.amount_official ? expense.amount_official.toString() : '');
+    setDescription(expense.description);
+    setVendor(expense.vendor || '');
+    setInvoiceNumber(expense.invoice_number || '');
+    setPaymentMethod(expense.payment_method || 'Nakit');
+    setShowForm(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleDelete = async (id: string) => {
@@ -202,7 +277,7 @@ export default function ExpensesPage() {
   const getCategoryName = (category: ExpenseCategory) => {
     if (!category.parent_id) return category.name;
     
-    const parent = categories.find(c => c.id === category.parent_id);
+    const parent = categories.find(c => c.id.toString() === category.parent_id?.toString());
     return parent ? `${parent.name} → ${category.name}` : category.name;
   };
 
@@ -219,6 +294,12 @@ export default function ExpensesPage() {
     return acc;
   }, {} as Record<string, ExpenseCategory[]>);
 
+  const selectedCatObjForRender = categories.find(c => c.id.toString() === categoryId.toString());
+  const showPersonnelSelect = selectedCatObjForRender?.name === 'Personel' || 
+                              selectedCatObjForRender?.name === 'Avans' || 
+                              selectedCatObjForRender?.name === 'Maaş' ||
+                              categories.find(c => c.id.toString() === selectedCatObjForRender?.parent_id?.toString())?.name === 'Personel';
+
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="container mx-auto px-6 lg:px-12 max-w-7xl">
@@ -233,7 +314,10 @@ export default function ExpensesPage() {
             <p className="text-gray-600 mt-2">Gider kayıtlarını yönetin ve kategorilere göre filtreleyin</p>
           </div>
           <button
-            onClick={() => setShowForm(!showForm)}
+            onClick={() => {
+              if (showForm && editingId) resetForm();
+              setShowForm(!showForm);
+            }}
             className="bg-gray-900 text-white px-6 py-3 uppercase text-sm tracking-wide hover:bg-gray-700 transition-colors"
           >
             {showForm ? 'Formu Kapat' : '+ Yeni Gider Ekle'}
@@ -243,7 +327,7 @@ export default function ExpensesPage() {
         {/* Form */}
         {showForm && (
           <div className="bg-white border border-gray-200 p-8 mb-8">
-            <h2 className="text-2xl font-light tracking-wide mb-6">Yeni Gider Kaydı</h2>
+            <h2 className="text-2xl font-light tracking-wide mb-6">{editingId ? 'Gider Kaydını Düzenle' : 'Yeni Gider Kaydı'}</h2>
             <form onSubmit={handleSubmit}>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
@@ -292,6 +376,26 @@ export default function ExpensesPage() {
                   </select>
                 </div>
               </div>
+
+              {showPersonnelSelect && (
+                <div className="mb-6 bg-blue-50 p-4 border border-blue-100 rounded">
+                  <label className="block text-sm uppercase tracking-wide text-blue-900 mb-2 font-medium">
+                    Personel Seçimi *
+                  </label>
+                  <select
+                    value={personnelId}
+                    onChange={(e) => setPersonnelId(e.target.value)}
+                    className="w-full border border-blue-200 px-4 py-3 focus:outline-none focus:border-blue-500 bg-white"
+                    required
+                  >
+                    <option value="">Personel Seçin</option>
+                    {personnelList.map(p => (
+                      <option key={p.id} value={p.id}>{p.first_name} {p.last_name}</option>
+                    ))}
+                  </select>
+                  <p className="text-xs text-blue-700 mt-2">Bu gider (Maaş/Avans) seçilen personelin hesabına yazılacaktır.</p>
+                </div>
+              )}
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 <div>
@@ -389,7 +493,7 @@ export default function ExpensesPage() {
                   disabled={submitting}
                   className="bg-gray-900 text-white px-8 py-3 uppercase text-sm tracking-wide hover:bg-gray-700 transition-colors disabled:opacity-50"
                 >
-                  {submitting ? 'Kaydediliyor...' : 'Kaydet'}
+                  {submitting ? 'Kaydediliyor...' : (editingId ? 'Güncelle' : 'Kaydet')}
                 </button>
                 <button
                   type="button"
@@ -502,54 +606,115 @@ export default function ExpensesPage() {
               <p className="text-gray-500">Henüz gider kaydı bulunmuyor.</p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50 border-b border-gray-200">
-                  <tr>
-                    <th className="px-6 py-4 text-left text-xs uppercase tracking-wide text-gray-600 font-light">Tarih</th>
-                    <th className="px-6 py-4 text-left text-xs uppercase tracking-wide text-gray-600 font-light">Kategori</th>
-                    <th className="px-6 py-4 text-left text-xs uppercase tracking-wide text-gray-600 font-light">Açıklama</th>
-                    <th className="px-6 py-4 text-left text-xs uppercase tracking-wide text-gray-600 font-light">Tedarikçi</th>
-                    <th className="px-6 py-4 text-right text-xs uppercase tracking-wide text-gray-600 font-light">Tutar</th>
-                    <th className="px-6 py-4 text-left text-xs uppercase tracking-wide text-gray-600 font-light">Ödeme</th>
-                    <th className="px-6 py-4 text-center text-xs uppercase tracking-wide text-gray-600 font-light">İşlemler</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {expenses.map((expense) => (
-                    <tr key={expense.id} className="border-b border-gray-100 hover:bg-gray-50">
-                      <td className="px-6 py-4 text-sm text-gray-900">
-                        {new Date(expense.expense_date).toLocaleDateString('tr-TR')}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-900">
-                        {expense.expense_categories?.name || '-'}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-900">
-                        {expense.description}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-600">
-                        {expense.vendor || '-'}
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        <div className="font-medium text-gray-900">€{Number(expense.amount).toFixed(2)}</div>
-                        <div className="text-xs text-green-600 mt-0.5">€{Number(expense.amount_official || expense.amount).toFixed(2)}</div>
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-600">
-                        {expense.payment_method || '-'}
-                      </td>
-                      <td className="px-6 py-4 text-center">
+            <>
+              {/* Mobile Card View */}
+              <div className="md:hidden divide-y divide-gray-100">
+                {expenses.map((expense) => (
+                  <div key={expense.id} className="p-4 bg-white hover:bg-gray-50">
+                    <div className="flex justify-between items-start mb-2">
+                      <div>
+                        <div className="font-medium text-gray-900">{expense.expense_categories?.name || '-'}</div>
+                        {expense.personnel && (
+                          <div className="text-xs text-blue-600 mt-0.5 flex items-center gap-1">
+                            <span>👤</span> {expense.personnel.first_name} {expense.personnel.last_name}
+                          </div>
+                        )}
+                      </div>
+                      <div className="text-right">
+                        <div className="font-bold text-gray-900">€{Number(expense.amount).toFixed(2)}</div>
+                        <div className="text-[10px] text-green-600 mt-0.5">Esas: €{Number(expense.amount_official || expense.amount).toFixed(2)}</div>
+                      </div>
+                    </div>
+                    
+                    {expense.description && (
+                      <div className="text-sm text-gray-600 mb-2">{expense.description}</div>
+                    )}
+                    
+                    <div className="flex justify-between items-center text-xs text-gray-500 mt-3 pt-3 border-t border-gray-50">
+                      <div>
+                        <span>{new Date(expense.expense_date).toLocaleDateString('tr-TR')}</span>
+                        {expense.payment_method && <span className="ml-2 px-2 py-0.5 bg-gray-100 rounded">{expense.payment_method}</span>}
+                      </div>
+                      <div>
+                        <button
+                          onClick={() => handleEdit(expense)}
+                          className="text-blue-500 hover:text-blue-700 font-medium mr-4"
+                        >
+                          Düzenle
+                        </button>
                         <button
                           onClick={() => handleDelete(expense.id)}
-                          className="text-red-600 hover:text-red-800 text-sm"
+                          className="text-red-500 hover:text-red-700 font-medium"
                         >
                           Sil
                         </button>
-                      </td>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Desktop Table View */}
+              <div className="hidden md:block overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-50 border-b border-gray-200">
+                    <tr>
+                      <th className="px-6 py-4 text-left text-xs uppercase tracking-wide text-gray-600 font-light whitespace-nowrap">Tarih</th>
+                      <th className="px-6 py-4 text-left text-xs uppercase tracking-wide text-gray-600 font-light">Kategori</th>
+                      <th className="px-6 py-4 text-left text-xs uppercase tracking-wide text-gray-600 font-light">Açıklama</th>
+                      <th className="px-6 py-4 text-left text-xs uppercase tracking-wide text-gray-600 font-light">Tedarikçi</th>
+                      <th className="px-6 py-4 text-right text-xs uppercase tracking-wide text-gray-600 font-light">Tutar</th>
+                      <th className="px-6 py-4 text-left text-xs uppercase tracking-wide text-gray-600 font-light">Ödeme</th>
+                      <th className="px-6 py-4 text-center text-xs uppercase tracking-wide text-gray-600 font-light">İşlemler</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {expenses.map((expense) => (
+                      <tr key={expense.id} className="border-b border-gray-100 hover:bg-gray-50">
+                        <td className="px-6 py-4 text-sm text-gray-900 whitespace-nowrap">
+                          {new Date(expense.expense_date).toLocaleDateString('tr-TR')}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-900">
+                          <div>{expense.expense_categories?.name || '-'}</div>
+                          {expense.personnel && (
+                            <div className="text-xs text-blue-600 mt-1 flex items-center gap-1">
+                              <span>👤</span> {expense.personnel.first_name} {expense.personnel.last_name}
+                            </div>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-900">
+                          {expense.description}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-600">
+                          {expense.vendor || '-'}
+                        </td>
+                        <td className="px-6 py-4 text-right whitespace-nowrap">
+                          <div className="font-medium text-gray-900">€{Number(expense.amount).toFixed(2)}</div>
+                          <div className="text-xs text-green-600 mt-0.5">€{Number(expense.amount_official || expense.amount).toFixed(2)}</div>
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">
+                          {expense.payment_method || '-'}
+                        </td>
+                        <td className="px-6 py-4 text-center">
+                          <button
+                            onClick={() => handleEdit(expense)}
+                            className="text-blue-600 hover:text-blue-800 text-sm mr-3"
+                          >
+                            Düzenle
+                          </button>
+                          <button
+                            onClick={() => handleDelete(expense.id)}
+                            className="text-red-600 hover:text-red-800 text-sm"
+                          >
+                            Sil
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
         </div>
 

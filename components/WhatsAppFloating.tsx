@@ -2,9 +2,11 @@
 
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
+import { usePathname } from 'next/navigation';
 
 export default function WhatsAppFloating() {
   const [whatsappNumber, setWhatsappNumber] = useState('');
+  const pathname = usePathname();
 
   useEffect(() => {
     loadWhatsAppNumber();
@@ -22,7 +24,7 @@ export default function WhatsAppFloating() {
     }
   };
 
-  if (!whatsappNumber) return null;
+  if (!whatsappNumber || pathname?.startsWith('/admin')) return null;
 
   const handleClick = () => {
     const message = encodeURIComponent('Merhaba! Kapadokya Restaurant hakkında bilgi almak istiyorum.');
