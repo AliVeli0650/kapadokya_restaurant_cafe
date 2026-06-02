@@ -113,7 +113,7 @@ export default function PersonnelDetailPage() {
         .order('expense_date', { ascending: false });
 
       if (expensesError) throw expensesError;
-      setExpenses(expensesData || []);
+      setExpenses((expensesData as any) || []);
 
     } catch (error: any) {
       console.error('Personel detayları yüklenirken hata:', error);
