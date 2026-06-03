@@ -51,6 +51,10 @@ export default function PersonnelDetailPage() {
   const [editForm, setEditForm] = useState<Partial<Personnel>>({});
   const [updating, setUpdating] = useState(false);
 
+  // Hour Edit states
+  const [editingHourId, setEditingHourId] = useState<string | null>(null);
+  const [editHourForm, setEditHourForm] = useState<Partial<PersonnelHour>>({});
+
   // Date filter
   const [filterType, setFilterType] = useState<'month' | 'custom'>('month');
   const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7)); // YYYY-MM
@@ -135,6 +139,64 @@ export default function PersonnelDetailPage() {
     }
   };
 
+  const handleDeleteHour = async (hourId: string) => {
+    if (!confirm('Bu saat kaydını silmek istediğinizden emin misiniz?')) return;
+    try {
+      const { error } = await supabase.from('personnel_hours').delete().eq('id', hourId);
+      if (error) throw error;
+      toast.success('Kayıt silindi.');
+      loadPersonnelData();
+    } catch (error: any) {
+      toast.error('Silme işlemi başarısız.');
+    }
+  };
+
+  const handleEditHourClick = (hour: PersonnelHour) => {
+    setEditingHourId(hour.id);
+    setEditHourForm({
+      record_date: hour.record_date,
+      missing_hours: hour.missing_hours,
+      overtime_hours: hour.overtime_hours,
+      description: hour.description
+    });
+  };
+
+  const handleUpdateHour = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingHourId) return;
+    
+    try {
+      const { error } = await supabase
+        .from('personnel_hours')
+        .update({
+          record_date: editHourForm.record_date,
+          missing_hours: Number(editHourForm.missing_hours || 0),
+          overtime_hours: Number(editHourForm.overtime_hours || 0),
+          description: editHourForm.description || ''
+        })
+        .eq('id', editingHourId);
+
+      if (error) throw error;
+      toast.success('Saat kaydı güncellendi.');
+      setEditingHourId(null);
+      loadPersonnelData();
+    } catch (error: any) {
+      toast.error('Güncelleme başarısız.');
+    }
+  };
+
+  const handleDeleteExpense = async (expenseId: string) => {
+    if (!confirm('Bu finansal kaydı silmek istediğinizden emin misiniz?')) return;
+    try {
+      const { error } = await supabase.from('expenses').delete().eq('id', expenseId);
+      if (error) throw error;
+      toast.success('Kayıt silindi.');
+      loadPersonnelData();
+    } catch (error: any) {
+      toast.error('Silme işlemi başarısız.');
+    }
+  };
+
   const handleEditClick = () => {
     setEditForm({
       first_name: person?.first_name,
@@ -196,6 +258,7 @@ export default function PersonnelDetailPage() {
   // Summaries
   const totalMissingHours = hours.reduce((sum, h) => sum + Number(h.missing_hours), 0);
   const totalOvertimeHours = hours.reduce((sum, h) => sum + Number(h.overtime_hours), 0);
+  const netHours = totalOvertimeHours - totalMissingHours;
   const totalAdvances = expenses.filter(e => e.expense_categories?.name === 'Avans').reduce((sum, e) => sum + Number(e.amount), 0);
   const totalSalaryPayments = expenses.filter(e => e.expense_categories?.name === 'Maaş').reduce((sum, e) => sum + Number(e.amount), 0);
   const totalExpenses = expenses.reduce((sum, e) => sum + Number(e.amount), 0);
@@ -370,7 +433,14 @@ export default function PersonnelDetailPage() {
               <span className="block text-[10px] uppercase tracking-wider text-gray-400 mb-1">Fazla Mesai</span>
               <span className="text-xl text-blue-500 font-medium">{totalOvertimeHours} <span className="text-sm font-normal">saat</span></span>
             </div>
-            <div className="w-px bg-gray-100 hidden md:block"></div>
+            <div className="w-px bg-gray-100 hidden xl:block"></div>
+            <div className="text-center xl:text-left">
+              <span className="block text-[10px] uppercase tracking-wider text-gray-900 font-bold mb-1">Net Mesai</span>
+              <span className={`text-xl font-bold ${netHours > 0 ? 'text-blue-600' : netHours < 0 ? 'text-red-500' : 'text-gray-600'}`}>
+                {netHours > 0 ? '+' : ''}{netHours} <span className="text-sm font-normal">saat</span>
+              </span>
+            </div>
+            <div className="w-px bg-gray-100 hidden xl:block"></div>
             <div className="text-center xl:text-left">
               <span className="block text-[10px] uppercase tracking-wider text-gray-400 mb-1">Avanslar</span>
               <span className="text-xl text-orange-500 font-medium">€{totalAdvances.toFixed(2)}</span>
@@ -426,8 +496,13 @@ export default function PersonnelDetailPage() {
                       <div className="text-sm text-gray-500">{e.description}</div>
                       <div className="text-xs text-gray-400 mt-1">{new Date(e.expense_date).toLocaleDateString('tr-TR')}</div>
                     </div>
-                    <div className="font-medium text-lg text-gray-900">
-                      €{e.amount.toFixed(2)}
+                    <div className="flex items-center gap-4">
+                      <div className="font-medium text-lg text-gray-900">
+                        €{e.amount.toFixed(2)}
+                      </div>
+                      <button onClick={() => handleDeleteExpense(e.id)} className="text-gray-400 hover:text-red-500 transition-colors" title="Sil">
+                        🗑️
+                      </button>
                     </div>
                   </li>
                 ))}
@@ -450,27 +525,66 @@ export default function PersonnelDetailPage() {
             ) : (
               <ul className="divide-y divide-gray-100">
                 {hours.map(h => {
-                  const net = h.overtime_hours - h.missing_hours;
+                  if (editingHourId === h.id) {
+                    return (
+                      <li key={h.id} className="p-4 hover:bg-gray-50 border-b border-gray-100 last:border-0">
+                        <form onSubmit={handleUpdateHour} className="flex flex-col gap-3">
+                          <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                            <div>
+                              <label className="text-[10px] uppercase tracking-wide text-gray-500 mb-1 block">Tarih</label>
+                              <input type="date" required value={editHourForm.record_date || ''} onChange={e => setEditHourForm({...editHourForm, record_date: e.target.value})} className="w-full border border-gray-300 px-2 py-1 text-sm focus:outline-none focus:border-blue-500" />
+                            </div>
+                            <div>
+                              <label className="text-[10px] uppercase tracking-wide text-gray-500 mb-1 block">Eksik (Saat)</label>
+                              <input type="number" step="0.5" min="0" value={editHourForm.missing_hours || 0} onChange={e => setEditHourForm({...editHourForm, missing_hours: Number(e.target.value)})} className="w-full border border-gray-300 px-2 py-1 text-sm focus:outline-none focus:border-blue-500" />
+                            </div>
+                            <div>
+                              <label className="text-[10px] uppercase tracking-wide text-gray-500 mb-1 block">Fazla (Saat)</label>
+                              <input type="number" step="0.5" min="0" value={editHourForm.overtime_hours || 0} onChange={e => setEditHourForm({...editHourForm, overtime_hours: Number(e.target.value)})} className="w-full border border-gray-300 px-2 py-1 text-sm focus:outline-none focus:border-blue-500" />
+                            </div>
+                            <div>
+                              <label className="text-[10px] uppercase tracking-wide text-gray-500 mb-1 block">Açıklama</label>
+                              <input type="text" value={editHourForm.description || ''} onChange={e => setEditHourForm({...editHourForm, description: e.target.value})} className="w-full border border-gray-300 px-2 py-1 text-sm focus:outline-none focus:border-blue-500" />
+                            </div>
+                          </div>
+                          <div className="flex justify-end gap-2 mt-2">
+                            <button type="button" onClick={() => setEditingHourId(null)} className="px-3 py-1 text-xs uppercase tracking-wide border border-gray-300 hover:bg-gray-100 rounded">İptal</button>
+                            <button type="submit" className="px-3 py-1 text-xs uppercase tracking-wide bg-blue-600 text-white hover:bg-blue-700 rounded">Kaydet</button>
+                          </div>
+                        </form>
+                      </li>
+                    );
+                  }
+                  
                   return (
                   <li key={h.id} className="p-4 flex justify-between items-center hover:bg-gray-50">
                     <div>
                       <div className="font-medium text-gray-900">{new Date(h.record_date).toLocaleDateString('tr-TR')}</div>
                       {h.description && <div className="text-sm text-gray-500 italic mt-1">{h.description}</div>}
                     </div>
-                    <div className="flex items-center gap-4 md:gap-6 text-sm text-right">
-                      {h.missing_hours > 0 ? (
-                        <div className="w-12"><span className="text-gray-400 text-[10px] uppercase block">Eksik</span><span className="text-red-600 font-medium">-{h.missing_hours}s</span></div>
-                      ) : <div className="w-12"></div>}
-                      
-                      {h.overtime_hours > 0 ? (
-                        <div className="w-12"><span className="text-gray-400 text-[10px] uppercase block">Fazla</span><span className="text-blue-600 font-medium">+{h.overtime_hours}s</span></div>
-                      ) : <div className="w-12"></div>}
-                      
-                      <div className="w-16 bg-gray-100 py-1 rounded">
-                        <span className="text-gray-500 text-[10px] uppercase block">Net</span>
-                        <span className={`font-bold ${net > 0 ? 'text-blue-600' : net < 0 ? 'text-red-600' : 'text-gray-600'}`}>
-                          {net > 0 ? '+' : ''}{net}s
+                    <div className="flex items-center gap-4 text-right">
+                      {h.missing_hours > 0 && (
+                        <span className="inline-flex items-center px-3 py-1 rounded-md bg-red-50 text-red-600 text-sm font-medium border border-red-100">
+                          Eksik: -{h.missing_hours} saat
                         </span>
+                      )}
+                      {h.overtime_hours > 0 && (
+                        <span className="inline-flex items-center px-3 py-1 rounded-md bg-blue-50 text-blue-600 text-sm font-medium border border-blue-100">
+                          Fazla: +{h.overtime_hours} saat
+                        </span>
+                      )}
+                      {h.missing_hours === 0 && h.overtime_hours === 0 && (
+                        <span className="inline-flex items-center px-3 py-1 rounded-md bg-gray-50 text-gray-500 text-sm font-medium border border-gray-200">
+                          Kayıt Yok
+                        </span>
+                      )}
+                      <div className="flex items-center gap-2 border-l pl-3 ml-2 border-gray-200">
+                        <button onClick={() => handleEditHourClick(h)} className="text-gray-400 hover:text-blue-500 transition-colors" title="Düzenle">
+                          ✏️
+                        </button>
+                        <button onClick={() => handleDeleteHour(h.id)} className="text-gray-400 hover:text-red-500 transition-colors" title="Sil">
+                          🗑️
+                        </button>
                       </div>
                     </div>
                   </li>
