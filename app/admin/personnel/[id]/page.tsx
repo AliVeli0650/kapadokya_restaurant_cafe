@@ -259,7 +259,7 @@ export default function PersonnelDetailPage() {
   const totalMissingHours = hours.reduce((sum, h) => sum + Number(h.missing_hours), 0);
   const totalOvertimeHours = hours.reduce((sum, h) => sum + Number(h.overtime_hours), 0);
   const netHours = totalOvertimeHours - totalMissingHours;
-  const totalAdvances = expenses.filter(e => e.expense_categories?.name === 'Avans').reduce((sum, e) => sum + Number(e.amount), 0);
+  const totalAdvances = expenses.filter(e => e.expense_categories?.name !== 'Maaş').reduce((sum, e) => sum + Number(e.amount), 0);
   const totalSalaryPayments = expenses.filter(e => e.expense_categories?.name === 'Maaş').reduce((sum, e) => sum + Number(e.amount), 0);
   const totalExpenses = expenses.reduce((sum, e) => sum + Number(e.amount), 0);
 
@@ -451,30 +451,28 @@ export default function PersonnelDetailPage() {
             </div>
           </div>
 
-          {person.base_salary ? (
-            <div className="flex items-center gap-4 bg-gray-50 border border-gray-100 px-6 py-3 rounded-xl w-full xl:w-auto justify-center">
-              <div className="text-right">
-                <span className="block text-[10px] uppercase tracking-wider text-gray-500 mb-0.5">Temel Maaş</span>
-                <span className="text-sm font-medium text-gray-900">€{person.base_salary.toFixed(2)}</span>
-              </div>
-              <div className="text-gray-300 font-light">-</div>
-              <div className="text-center">
-                <span className="block text-[10px] uppercase tracking-wider text-gray-500 mb-0.5">Ödenen Toplam</span>
-                <span className="text-sm font-medium text-red-500">€{totalExpenses.toFixed(2)}</span>
-              </div>
-              <div className="text-gray-300 font-light">=</div>
-              <div className="text-left pl-2">
-                <span className="block text-[10px] uppercase tracking-widest text-gray-800 font-bold mb-0.5">Kalan Bakiye</span>
+          <div className="flex items-center gap-4 bg-gray-50 border border-gray-100 px-6 py-3 rounded-xl w-full xl:w-auto justify-center">
+            <div className="text-right">
+              <span className="block text-[10px] uppercase tracking-wider text-gray-500 mb-0.5">Temel Maaş</span>
+              <span className="text-sm font-medium text-gray-900">{person.base_salary ? `€${person.base_salary.toFixed(2)}` : 'Belirtilmemiş'}</span>
+            </div>
+            <div className="text-gray-300 font-light">-</div>
+            <div className="text-center">
+              <span className="block text-[10px] uppercase tracking-wider text-gray-500 mb-0.5">Ödenen Toplam</span>
+              <span className="text-sm font-medium text-red-500">€{totalExpenses.toFixed(2)}</span>
+            </div>
+            <div className="text-gray-300 font-light">=</div>
+            <div className="text-left pl-2">
+              <span className="block text-[10px] uppercase tracking-widest text-gray-800 font-bold mb-0.5">Kalan Bakiye</span>
+              {person.base_salary ? (
                 <span className={`text-2xl font-bold ${person.base_salary - totalExpenses >= 0 ? 'text-green-600' : 'text-red-500'}`}>
                   €{(person.base_salary - totalExpenses).toFixed(2)}
                 </span>
-              </div>
+              ) : (
+                <span className="text-2xl font-bold text-gray-500">-</span>
+              )}
             </div>
-          ) : (
-            <div className="text-sm text-gray-400 italic text-center w-full xl:w-auto">
-              Bakiye hesaplaması için personeli düzenleyip maaş belirleyin.
-            </div>
-          )}
+          </div>
 
         </div>
 
